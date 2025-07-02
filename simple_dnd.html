@@ -181,7 +181,7 @@
 
     <div class="section special-ability">
         <h2>Special Ability or Tool</h2>
-        <p>Effectiveness: <span id="mind">0</span></p>
+        <p>Effectiveness: <span id="effectiveness">0</span></p>
         <input type="text" id="special-ability" placeholder="Enter your special ability or tool" onchange="saveSpecialAbility()">
         <div class="uses">
             <span>Uses:</span>
@@ -236,9 +236,9 @@
             const damage = 2 + pow;
             document.getElementById('damage').textContent = damage;
 
-            // Update damage based on Power
+            // Update effectiveness based on Mind
             const mind = 0 + mind;
-            document.getElementById('mind').textContent = mind;
+            document.getElementById('effectiveness').textContent = mind;
 
             // Save stats to local storage
             localStorage.setItem('constitution', con);
