@@ -1,48 +1,9 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple D&D Interface</title>
+    <title>Simple D&D Game</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -53,61 +14,137 @@
         }
         .section {
             margin-bottom: 20px;
-        }
-        .section h2 {
-            color: #333;
-        }
-        .stat, .hp, .abilities, .notes {
             background-color: #fff;
-            padding: 10px;
+            padding: 15px;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .hp input {
-            width: 50px;
-            margin: 0 10px;
+        .section h2 {
+            color: #333;
+            margin-top: 0;
         }
-        .abilities ul {
-            list-style: none;
-            padding: 0;
+        .title input {
+            font-size: 1.5em;
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 20px;
         }
-        .abilities li {
+        .stat select {
+            margin-left: 10px;
+            padding: 5px;
+        }
+        .stat p {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stat-description {
+            font-style: italic;
+            color: #555;
+        }
+        .hp p {
+            margin: 10px 0;
+        }
+        .hp button {
+            padding: 5px 10px;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        .abilities input {
+            width: 100%;
             margin: 5px 0;
+            padding: 5px;
+        }
+        .special-ability input {
+            width: 70%;
+            margin-right: 10px;
+            padding: 5px;
+        }
+        .special-ability label {
+            margin-right: 10px;
+        }
+        .dice-roller select, .dice-roller button {
+            padding: 5px;
+            margin: 5px;
+        }
+        .dice-result {
+            font-weight: bold;
+            color: #d32f2f;
         }
         .notes textarea {
             width: 100%;
             height: 100px;
+            margin: 10px 0;
+            padding: 5px;
         }
         button {
-            padding: 5px 10px;
-            margin: 5px;
-            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+        }
+        button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
-    <h1>Simple D&D Character</h1>
+    <div class="title">
+        <input type="text" id="player-name" placeholder="Enter Character Name" onchange="saveName()">
+    </div>
 
     <div class="section stat">
         <h2>Stats</h2>
-        <p>Strength: <span id="strength">10</span></p>
-        <p>Agility: <span id="agility">10</span></p>
-        <p>Mind: <span id="mind">10</span></p>
+        <p>Constitution: <select id="constitution" onchange="updateStats()">
+            <option value="-1">-1</option>
+            <option value="0" selected>0</option>
+            <option value="1">+1</option>
+        </select> <span class="stat-description">Affects HP and defensive rolls.</span></p>
+        <p>Power: <select id="power" onchange="updateStats()">
+            <option value="-1">-1</option>
+            <option value="0" selected>0</option>
+            <option value="1">+1</option>
+        </select> <span class="stat-description">Affects damage/healing and offensive rolls.</span></p>
+        <p>Mind: <select id="mind" onchange="updateStats()">
+            <option value="-1">-1</option>
+            <option value="0" selected>0</option>
+            <option value="1">+1</option>
+        </select> <span class="stat-description">Affects roleplay/social/non-combat rolls.</span></p>
+        <p id="stat-error" style="color: red; display: none;">All stats must be unique!</p>
     </div>
 
     <div class="section hp">
         <h2>Hit Points (HP)</h2>
-        <p>Current HP: <span id="current-hp">5</span> / 5</p>
+        <p>Current HP: <span id="current-hp">5</span> / Total HP: <span id="total-hp">5</span></p>
         <button onclick="changeHP(1)">+1 HP</button>
         <button onclick="changeHP(-1)">-1 HP</button>
     </div>
 
     <div class="section abilities">
         <h2>Abilities/Weapons</h2>
-        <ul>
-            <li>Sword: 1d6 damage, melee attack</li>
-            <li>Fire Bolt: 1d6 fire damage, 30ft range</li>
-        </ul>
+        <p>Damage/Healing: <span id="damage">2</span></p>
+        <input type="text" id="ability1" placeholder="Ability or Weapon 1" onchange="saveAbilities()">
+        <input type="text" id="ability2" placeholder="Ability or Weapon 2" onchange="saveAbilities()">
+        <input type="text" id="ability3" placeholder="Ability or Weapon 3" onchange="saveAbilities()">
+    </div>
+
+    <div class="section special-ability">
+        <h2>Special Ability</h2>
+        <input type="text" id="special-ability" placeholder="Enter your special ability" onchange="saveSpecialAbility()">
+        <label><input type="checkbox" id="use1" onchange="saveSpecialAbility()"> Use 1</label>
+        <label><input type="checkbox" id="use2" onchange="saveSpecialAbility()"> Use 2</label>
+        <label><input type="checkbox" id="use3" onchange="saveSpecialAbility()"> Use 3</label>
+    </div>
+
+    <div class="section dice-roller">
+        <h2>Dice Roller</h2>
+        <select id="dice-type">
+            <option value="coin">Coin Flip</option>
+            <option value="d6">d6</option>
+            <option value="d20">d20</option>
+        </select>
+        <button onclick="rollDice()">Roll</button>
+        <p>Result: <span id="dice-result">-</span></p>
     </div>
 
     <div class="section notes">
@@ -119,24 +156,118 @@
 
     <script>
         let currentHP = 5;
+        let totalHP = 5;
+
+        function saveName() {
+            const name = document.getElementById('player-name').value;
+            localStorage.setItem('player-name', name);
+        }
+
+        function updateStats() {
+            const con = parseInt(document.getElementById('constitution').value);
+            const pow = parseInt(document.getElementById('power').value);
+            const mind = parseInt(document.getElementById('mind').value);
+
+            // Check for unique stat values
+            if (con === pow || con === mind || pow === mind) {
+                document.getElementById('stat-error').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('stat-error').style.display = 'none';
+            }
+
+            // Update HP based on Constitution
+            totalHP = 5 + con;
+            currentHP = Math.min(currentHP, totalHP);
+            document.getElementById('total-hp').textContent = totalHP;
+            document.getElementById('current-hp').textContent = currentHP;
+
+            // Update damage based on Power
+            const damage = 2 + pow;
+            document.getElementById('damage').textContent = damage;
+
+            // Save stats to local storage
+            localStorage.setItem('constitution', con);
+            localStorage.setItem('power', pow);
+            localStorage.setItem('mind', mind);
+        }
 
         function changeHP(amount) {
-            currentHP = Math.max(0, Math.min(5, currentHP + amount));
+            currentHP = Math.max(0, Math.min(totalHP, currentHP + amount));
             document.getElementById('current-hp').textContent = currentHP;
+            localStorage.setItem('current-hp', currentHP);
+        }
+
+        function saveAbilities() {
+            const ability1 = document.getElementById('ability1').value;
+            const ability2 = document.getElementById('ability2').value;
+            const ability3 = document.getElementById('ability3').value;
+            localStorage.setItem('ability1', ability1);
+            localStorage.setItem('ability2', ability2);
+            localStorage.setItem('ability3', ability3);
+        }
+
+        function saveSpecialAbility() {
+            const special = document.getElementById('special-ability').value;
+            localStorage.setItem('special-ability', special);
+            localStorage.setItem('use1', document.getElementById('use1').checked);
+            localStorage.setItem('use2', document.getElementById('use2').checked);
+            localStorage.setItem('use3', document.getElementById('use3').checked);
         }
 
         function saveNotes() {
             const notes = document.getElementById('notes').value;
-            localStorage.setItem('dnd-notes', notes);
+            localStorage.setItem('notes', notes);
             alert('Notes saved!');
         }
 
-        // Load saved notes on page load
-        window.onload = function() {
-            const savedNotes = localStorage.getItem('dnd-notes');
-            if (savedNotes) {
-                document.getElementById('notes').value = savedNotes;
+        function rollDice() {
+            const diceType = document.getElementById('dice-type').value;
+            let result;
+            if (diceType === 'coin') {
+                result = Math.random() < 0.5 ? 'Heads' : 'Tails';
+            } else if (diceType === 'd6') {
+                result = Math.floor(Math.random() * 6) + 1;
+            } else {
+                result = Math.floor(Math.random() * 20) + 1;
             }
+            document.getElementById('dice-result').textContent = result;
+        }
+
+        // Load saved data on page load
+        window.onload = function() {
+            const savedName = localStorage.getItem('player-name');
+            if (savedName) document.getElementById('player-name').value = savedName;
+
+            const savedCon = localStorage.getItem('constitution');
+            const savedPow = localStorage.getItem('power');
+            const savedMind = localStorage.getItem('mind');
+            if (savedCon) document.getElementById('constitution').value = savedCon;
+            if (savedPow) document.getElementById('power').value = savedPow;
+            if (savedMind) document.getElementById('mind').value = savedMind;
+            updateStats();
+
+            const savedHP = localStorage.getItem('current-hp');
+            if (savedHP) {
+                currentHP = parseInt(savedHP);
+                document.getElementById('current-hp').textContent = currentHP;
+            }
+
+            const savedAbility1 = localStorage.getItem('ability1');
+            const savedAbility2 = localStorage.getItem('ability2');
+            const savedAbility3 = localStorage.getItem('ability3');
+            if (savedAbility1) document.getElementById('ability1').value = savedAbility1;
+            if (savedAbility2) document.getElementById('ability2').value = savedAbility2;
+            if (savedAbility3) document.getElementById('ability3').value = savedAbility3;
+
+            const savedSpecial = localStorage.getItem('special-ability');
+            if (savedSpecial) document.getElementById('special-ability').value = savedSpecial;
+            document.getElementById('use1').checked = localStorage.getItem('use1') === 'true';
+            document.getElementById('use2').checked = localStorage.getItem('use2') === 'true';
+            document.getElementById('use3').checked = localStorage.getItem('use3') === 'true';
+
+            const savedNotes = localStorage.getItem('notes');
+            if (savedNotes) document.getElementById('notes').value = savedNotes;
         };
     </script>
 </body>
