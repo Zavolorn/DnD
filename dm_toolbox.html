@@ -102,7 +102,7 @@
             text-transform: uppercase;
         }
         .participant-details input[type="number"] {
-            width: 25px;
+            width: 40px;
             display: inline-block;
         }
         input[type="radio"] {
@@ -177,6 +177,9 @@
         .clear {
             clear: both;
         }
+        .npc-row {
+            background-color: #FFE6E6; /* Light red tint for NPC */
+        }
         @media screen and (max-width: 600px) {
             body {
                 padding: 5px;
@@ -193,7 +196,7 @@
                 font-size: 12px;
             }
             .participant-details input[type="number"] {
-                width: 18px;
+                width: 30px;
             }
             button {
                 padding: 3px 6px;
@@ -285,15 +288,17 @@
             const result = Math.floor(Math.random() * 20) + 1;
             const button = document.querySelector('.d20-roll');
             button.textContent = result;
-            setTimeout(() => {
-                button.textContent = 'ROLL D20';
-            }, 2000);
         }
 
         function updateParticipant(index) {
             const type = document.querySelector(`input[name="type-${index}"]:checked`).value;
             const acInput = document.getElementById(`ac-${index}`);
+            const row = document.querySelector(`.participant[data-index="${index}"]`);
             acInput.style.display = type === 'NPC' ? 'block' : 'none';
+            row.classList.remove('npc-row');
+            if (type === 'NPC') {
+                row.classList.add('npc-row');
+            }
             saveParticipants();
         }
 
@@ -422,7 +427,7 @@
                         participantCount = 0;
                         data['combat-participants'].forEach((participant, index) => {
                             const row = document.createElement('tr');
-                            row.className = 'participant';
+                            row.className = `participant ${participant.type === 'NPC' ? 'npc-row' : ''}`;
                             row.setAttribute('data-index', index);
                             row.innerHTML = `
                                 <td>
@@ -476,7 +481,7 @@
                 participantCount = 0;
                 participants.forEach((participant, index) => {
                     const row = document.createElement('tr');
-                    row.className = 'participant';
+                    row.className = `participant ${participant.type === 'NPC' ? 'npc-row' : ''}`;
                     row.setAttribute('data-index', index);
                     row.innerHTML = `
                         <td>
