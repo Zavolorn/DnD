@@ -156,7 +156,7 @@
             <option value="-1">-1</option>
             <option value="0" selected>0</option>
             <option value="1">+1</option>
-        </select> <span class="stat-description">Affects roleplay/social/non-combat rolls.</span></p>
+        </select> <span class="stat-description">Affects roleplay/special ability/non-combat rolls.</span></p>
         <p id="stat-error" style="color: red; display: none;">All stats must be unique!</p>
     </div>
 
@@ -181,7 +181,7 @@
 
     <div class="section special-ability">
         <h2>Special Ability or Tool</h2>
-        <p>Effectiveness: <span id="Mind">2</span></p>
+        <p>Effectiveness: <span id="mind">0</span></p>
         <input type="text" id="special-ability" placeholder="Enter your special ability or tool" onchange="saveSpecialAbility()">
         <div class="uses">
             <span>Uses:</span>
@@ -238,7 +238,7 @@
 
             // Update damage based on Power
             const mind = 0 + mind;
-            document.getElementById('Mind').textContent = Mind;
+            document.getElementById('mind').textContent = Mind;
 
             // Save stats to local storage
             localStorage.setItem('constitution', con);
