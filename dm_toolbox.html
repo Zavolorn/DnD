@@ -1,0 +1,397 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D DM Toolbox</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 650px;
+            margin: 10px auto;
+            padding: 20px;
+            background-color: #f5f5dc; /* Parchment background */
+            color: #333;
+        }
+        .section {
+            margin: 10px;
+            background-color: #E6E6FA; /* Light purple background */
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #4B0082; /* Deep purple border */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .section h1, .section h2 {
+            font-family: 'Georgia', serif;
+            color: #4B0082; /* Deep purple text */
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        th, td {
+            border: 1px solid #4B0082; /* Deep purple border */
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4B0082; /* Deep purple */
+            color: white;
+        }
+        th.type { width: 80px; }
+        th.name { width: 200px; }
+        th.hp { width: 150px; }
+        th.ac { width: 80px; }
+        th.initiative { width: 80px; }
+        th.remove { width: 50px; }
+        input[type="text"] {
+            width: 100%;
+            min-width: 100%;
+            box-sizing: border-box;
+            padding: 5px;
+            border: 1px solid #4B0082;
+            border-radius: 3px;
+        }
+        input[type="number"] {
+            width: 90%;
+            padding: 5px;
+            border: 1px solid #4B0082;
+            border-radius: 3px;
+        }
+        input[type="radio"] {
+            margin: 0 5px;
+        }
+        .hp-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .hp-controls input[type="number"] {
+            width: 50px;
+            display: inline-block;
+        }
+        button {
+            background-color: #4B0082; /* Deep purple */
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #6A5ACD; /* Lighter purple for hover */
+        }
+        .remove-participant {
+            background-color: #d32f2f;
+        }
+        .remove-participant:hover {
+            background-color: #b71c1c;
+        }
+        .add-participant, .sort-initiative {
+            background-color: #4B0082;
+            padding: 8px 15px;
+            margin: 5px;
+        }
+        .add-participant:hover, .sort-initiative:hover {
+            background-color: #6A5ACD;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">
+        <h1>D&D DM Toolbox</h1>
+    </div>
+
+    <div class="section combat-tracker">
+        <h2>Combat Tracker</h2>
+        <table id="combat-table">
+            <thead>
+                <tr>
+                    <th class="type">Type</th>
+                    <th class="name">Name</th>
+                    <th class="hp">HP</th>
+                    <th class="ac">AC</th>
+                    <th class="initiative">Init</th>
+                    <th class="remove"></th>
+                </tr>
+            </thead>
+            <tbody id="combat-table-body">
+                <tr class="participant" data-index="0">
+                    <td>
+                        <label><input type="radio" name="type-0" value="PC" checked onchange="updateParticipant(0)"> PC</label>
+                        <label><input type="radio" name="type-0" value="NPC" onchange="updateParticipant(0)"> NPC</label>
+                    </td>
+                    <td><input type="text" id="name-0" placeholder="Name" onchange="saveParticipants()"></td>
+                    <td>
+                        <div class="hp-controls">
+                            <input type="number" id="current-hp-0" min="0" value="10" onchange="saveParticipants()">
+                            <span>/</span>
+                            <input type="number" id="total-hp-0" min="1" value="10" onchange="saveParticipants()">
+                            <button onclick="changeHP(0, 1)">+1</button>
+                            <button onclick="changeHP(0, -1)">-1</button>
+                        </div>
+                    </td>
+                    <td><input type="number" id="ac-0" min="0" value="10" style="display: none;" onchange="saveParticipants()"></td>
+                    <td><input type="number" id="initiative-0" value="0" onchange="saveParticipants()"></td>
+                    <td><button class="remove-participant" onclick="removeParticipant(0)" style="display: none;">-</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="button-group">
+            <button class="add-participant" onclick="addParticipant()">+ Add Participant</button>
+            <button class="sort-initiative" onclick="sortByInitiative()">Sort by Initiative</button>
+            <button onclick="exportData()">Export Tracker</button>
+            <label for="import-file" style="display: inline-block;">
+                <button onclick="document.getElementById('import-file').click()">Import Tracker</button>
+            </label>
+            <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+        </div>
+    </div>
+
+    <script>
+        let participantCount = 1;
+
+        function updateParticipant(index) {
+            const type = document.querySelector(`input[name="type-${index}"]:checked`).value;
+            const acInput = document.getElementById(`ac-${index}`);
+            acInput.style.display = type === 'NPC' ? 'block' : 'none';
+            saveParticipants();
+        }
+
+        function changeHP(index, amount) {
+            const currentHPInput = document.getElementById(`current-hp-${index}`);
+            const totalHPInput = document.getElementById(`total-hp-${index}`);
+            let currentHP = parseInt(currentHPInput.value) || 0;
+            const totalHP = parseInt(totalHPInput.value) || 1;
+            currentHP = Math.max(0, Math.min(totalHP, currentHP + amount));
+            currentHPInput.value = currentHP;
+            saveParticipants();
+        }
+
+        function addParticipant() {
+            const tableBody = document.getElementById('combat-table-body');
+            const index = participantCount++;
+            const row = document.createElement('tr');
+            row.className = 'participant';
+            row.setAttribute('data-index', index);
+            row.innerHTML = `
+                <td>
+                    <label><input type="radio" name="type-${index}" value="PC" checked onchange="updateParticipant(${index})"> PC</label>
+                    <label><input type="radio" name="type-${index}" value="NPC" onchange="updateParticipant(${index})"> NPC</label>
+                </td>
+                <td><input type="text" id="name-${index}" placeholder="Name" onchange="saveParticipants()"></td>
+                <td>
+                    <div class="hp-controls">
+                        <input type="number" id="current-hp-${index}" min="0" value="10" onchange="saveParticipants()">
+                        <span>/</span>
+                        <input type="number" id="total-hp-${index}" min="1" value="10" onchange="saveParticipants()">
+                        <button onclick="changeHP(${index}, 1)">+1</button>
+                        <button onclick="changeHP(${index}, -1)">-1</button>
+                    </div>
+                </td>
+                <td><input type="number" id="ac-${index}" min="0" value="10" style="display: none;" onchange="saveParticipants()"></td>
+                <td><input type="number" id="initiative-${index}" value="0" onchange="saveParticipants()"></td>
+                <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
+            `;
+            tableBody.appendChild(row);
+            updateRemoveButtons();
+            saveParticipants();
+        }
+
+        function removeParticipant(index) {
+            if (participantCount <= 1) return; // Prevent removing the last participant
+            const row = document.querySelector(`.participant[data-index="${index}"]`);
+            if (row) {
+                row.remove();
+                participantCount--;
+                updateRemoveButtons();
+                saveParticipants();
+            }
+        }
+
+        function updateRemoveButtons() {
+            const buttons = document.querySelectorAll('.remove-participant');
+            buttons.forEach(button => {
+                button.style.display = participantCount > 1 ? 'block' : 'none';
+            });
+        }
+
+        function saveParticipants() {
+            const participants = [];
+            const rows = document.querySelectorAll('.participant');
+            rows.forEach(row => {
+                const index = row.getAttribute('data-index');
+                const type = document.querySelector(`input[name="type-${index}"]:checked`).value;
+                participants.push({
+                    type: type,
+                    name: document.getElementById(`name-${index}`).value,
+                    currentHP: parseInt(document.getElementById(`current-hp-${index}`).value) || 0,
+                    totalHP: parseInt(document.getElementById(`total-hp-${index}`).value) || 1,
+                    ac: type === 'NPC' ? (parseInt(document.getElementById(`ac-${index}`).value) || 10) : null,
+                    initiative: parseInt(document.getElementById(`initiative-${index}`).value) || 0
+                });
+            });
+            localStorage.setItem('combat-participants', JSON.stringify(participants));
+        }
+
+        function sortByInitiative() {
+            const tableBody = document.getElementById('combat-table-body');
+            const rows = Array.from(document.querySelectorAll('.participant'));
+            rows.sort((a, b) => {
+                const initA = parseInt(document.getElementById(`initiative-${a.getAttribute('data-index')}`).value) || 0;
+                const initB = parseInt(document.getElementById(`initiative-${b.getAttribute('data-index')}`).value) || 0;
+                return initB - initA; // Descending order
+            });
+            tableBody.innerHTML = '';
+            rows.forEach(row => tableBody.appendChild(row));
+            saveParticipants();
+        }
+
+        function exportData() {
+            const data = {
+                'combat-participants': JSON.parse(localStorage.getItem('combat-participants') || '[]')
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dm_combat_tracker.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data['combat-participants']) {
+                        const tableBody = document.getElementById('combat-table-body');
+                        tableBody.innerHTML = '';
+                        participantCount = 0;
+                        data['combat-participants'].forEach((participant, index) => {
+                            const row = document.createElement('tr');
+                            row.className = 'participant';
+                            row.setAttribute('data-index', index);
+                            row.innerHTML = `
+                                <td>
+                                    <label><input type="radio" name="type-${index}" value="PC" ${participant.type === 'PC' ? 'checked' : ''} onchange="updateParticipant(${index})"> PC</label>
+                                    <label><input type="radio" name="type-${index}" value="NPC" ${participant.type === 'NPC' ? 'checked' : ''} onchange="updateParticipant(${index})"> NPC</label>
+                                </td>
+                                <td><input type="text" id="name-${index}" placeholder="Name" value="${participant.name || ''}" onchange="saveParticipants()"></td>
+                                <td>
+                                    <div class="hp-controls">
+                                        <input type="number" id="current-hp-${index}" min="0" value="${participant.currentHP || 10}" onchange="saveParticipants()">
+                                        <span>/</span>
+                                        <input type="number" id="total-hp-${index}" min="1" value="${participant.totalHP || 10}" onchange="saveParticipants()">
+                                        <button onclick="changeHP(${index}, 1)">+1</button>
+                                        <button onclick="changeHP(${index}, -1)">-1</button>
+                                    </div>
+                                </td>
+                                <td><input type="number" id="ac-${index}" min="0" value="${participant.ac || 10}" style="display: ${participant.type === 'NPC' ? 'block' : 'none'};" onchange="saveParticipants()"></td>
+                                <td><input type="number" id="initiative-${index}" value="${participant.initiative || 0}" onchange="saveParticipants()"></td>
+                                <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
+                            `;
+                            tableBody.appendChild(row);
+                            participantCount = index + 1;
+                        });
+                        localStorage.setItem('combat-participants', JSON.stringify(data['combat-participants']));
+                        updateRemoveButtons();
+                        alert('Combat tracker data imported successfully!');
+                    }
+                } catch (err) {
+                    alert('Error importing data: Invalid JSON file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Load saved data on page load
+        window.onload = function() {
+            const savedParticipants = localStorage.getItem('combat-participants');
+            if (savedParticipants) {
+                const participants = JSON.parse(savedParticipants);
+                const tableBody = document.getElementById('combat-table-body');
+                tableBody.innerHTML = '';
+                participantCount = 0;
+                participants.forEach((participant, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'participant';
+                    row.setAttribute('data-index', index);
+                    row.innerHTML = `
+                        <td>
+                            <label><input type="radio" name="type-${index}" value="PC" ${participant.type === 'PC' ? 'checked' : ''} onchange="updateParticipant(${index})"> PC</label>
+                            <label><input type="radio" name="type-${index}" value="NPC" ${participant.type === 'NPC' ? 'checked' : ''} onchange="updateParticipant(${index})"> NPC</label>
+                        </td>
+                        <td><input type="text" id="name-${index}" placeholder="Name" value="${participant.name || ''}" onchange="saveParticipants()"></td>
+                        <td>
+                            <div class="hp-controls">
+                                <input type="number" id="current-hp-${index}" min="0" value="${participant.currentHP || 10}" onchange="saveParticipants()">
+                                <span>/</span>
+                                <input type="number" id="total-hp-${index}" min="1" value="${participant.totalHP || 10}" onchange="saveParticipants()">
+                                <button onclick="changeHP(${index}, 1)">+1</button>
+                                <button onclick="changeHP(${index}, -1)">-1</button>
+                            </div>
+                        </td>
+                        <td><input type="number" id="ac-${index}" min="0" value="${participant.ac || 10}" style="display: ${participant.type === 'NPC' ? 'block' : 'none'};" onchange="saveParticipants()"></td>
+                        <td><input type="number" id="initiative-${index}" value="${participant.initiative || 0}" onchange="saveParticipants()"></td>
+                        <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
+                    `;
+                    tableBody.appendChild(row);
+                    participantCount = index + 1;
+                });
+                updateRemoveButtons();
+            }
+        };
+    </script>
+</body>
+</html>
