@@ -42,34 +42,73 @@
             font-style: italic;
             color: #555;
         }
-        .hp p {
-            margin: 10px 0;
+        .hp {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .hp-controls {
+            display: flex;
+            gap: 10px;
         }
         .hp button {
             padding: 5px 10px;
-            margin: 0 5px;
             cursor: pointer;
+        }
+        .hp-heart {
+            width: 100px;
+            height: 100px;
+            background-color: #d32f2f;
+            color: white;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            clip-path: path('M50 10 C20 10, 0 40, 0 60 C0 80, 50 100, 50 100 C50 100, 100 80, 100 60 C100 40, 80 10, 50 10 Z');
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
         }
         .abilities input {
             width: 100%;
             margin: 5px 0;
             padding: 5px;
         }
-        .special-ability input {
-            width: 70%;
-            margin-right: 10px;
+        .special-ability input[type="text"] {
+            width: 100%;
             padding: 5px;
+            margin: 10px 0;
+        }
+        .special-ability .uses {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .special-ability label {
             margin-right: 10px;
         }
-        .dice-roller select, .dice-roller button {
-            padding: 5px;
-            margin: 5px;
+        .dice-roller {
+            text-align: center;
         }
-        .dice-result {
+        .dice-button {
+            width: 100px;
+            height: 100px;
+            background-color: #FFD700;
+            color: white;
+            font-size: 1.2em;
             font-weight: bold;
-            color: #d32f2f;
+            border: none;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: 0 auto;
+        }
+        .dice-button:hover {
+            background-color: #E6B800;
         }
         .notes textarea {
             width: 100%;
@@ -115,9 +154,13 @@
 
     <div class="section hp">
         <h2>Hit Points (HP)</h2>
-        <p>Current HP: <span id="current-hp">5</span> / Total HP: <span id="total-hp">5</span></p>
-        <button onclick="changeHP(1)">+1 HP</button>
-        <button onclick="changeHP(-1)">-1 HP</button>
+        <div class="hp">
+            <div class="hp-controls">
+                <button onclick="changeHP(1)">+1 HP</button>
+                <button onclick="changeHP(-1)">-1 HP</button>
+            </div>
+            <div class="hp-heart" id="hp-display">5 / 5</div>
+        </div>
     </div>
 
     <div class="section abilities">
@@ -131,20 +174,17 @@
     <div class="section special-ability">
         <h2>Special Ability</h2>
         <input type="text" id="special-ability" placeholder="Enter your special ability" onchange="saveSpecialAbility()">
-        <label><input type="checkbox" id="use1" onchange="saveSpecialAbility()"> Use 1</label>
-        <label><input type="checkbox" id="use2" onchange="saveSpecialAbility()"> Use 2</label>
-        <label><input type="checkbox" id="use3" onchange="saveSpecialAbility()"> Use 3</label>
+        <div class="uses">
+            <span>Uses:</span>
+            <label><input type="checkbox" id="use1" onchange="saveSpecialAbility()"></label>
+            <label><input type="checkbox" id="use2" onchange="saveSpecialAbility()"></label>
+            <label><input type="checkbox" id="use3" onchange="saveSpecialAbility()"></label>
+        </div>
     </div>
 
     <div class="section dice-roller">
-        <h2>Dice Roller</h2>
-        <select id="dice-type">
-            <option value="coin">Coin Flip</option>
-            <option value="d6">d6</option>
-            <option value="d20">d20</option>
-        </select>
-        <button onclick="rollDice()">Roll</button>
-        <p>Result: <span id="dice-result">-</span></p>
+        <h2>Dice Roller (d20)</h2>
+        <button class="dice-button" id="dice-button" onclick="rollDice()"><span id="dice-result">-</span></button>
     </div>
 
     <div class="section notes">
@@ -179,8 +219,7 @@
             // Update HP based on Constitution
             totalHP = 5 + con;
             currentHP = Math.min(currentHP, totalHP);
-            document.getElementById('total-hp').textContent = totalHP;
-            document.getElementById('current-hp').textContent = currentHP;
+            document.getElementById('hp-display').textContent = `${currentHP} / ${totalHP}`;
 
             // Update damage based on Power
             const damage = 2 + pow;
@@ -194,7 +233,7 @@
 
         function changeHP(amount) {
             currentHP = Math.max(0, Math.min(totalHP, currentHP + amount));
-            document.getElementById('current-hp').textContent = currentHP;
+            document.getElementById('hp-display').textContent = `${currentHP} / ${totalHP}`;
             localStorage.setItem('current-hp', currentHP);
         }
 
@@ -222,15 +261,7 @@
         }
 
         function rollDice() {
-            const diceType = document.getElementById('dice-type').value;
-            let result;
-            if (diceType === 'coin') {
-                result = Math.random() < 0.5 ? 'Heads' : 'Tails';
-            } else if (diceType === 'd6') {
-                result = Math.floor(Math.random() * 6) + 1;
-            } else {
-                result = Math.floor(Math.random() * 20) + 1;
-            }
+            const result = Math.floor(Math.random() * 20) + 1;
             document.getElementById('dice-result').textContent = result;
         }
 
@@ -250,7 +281,7 @@
             const savedHP = localStorage.getItem('current-hp');
             if (savedHP) {
                 currentHP = parseInt(savedHP);
-                document.getElementById('current-hp').textContent = currentHP;
+                document.getElementById('hp-display').textContent = `${currentHP} / ${totalHP}`;
             }
 
             const savedAbility1 = localStorage.getItem('ability1');
