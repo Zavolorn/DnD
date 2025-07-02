@@ -128,9 +128,16 @@
             color: white;
             border: none;
             border-radius: 3px;
+            padding: 8px 15px;
+            cursor: pointer;
+            margin: 5px;
         }
         button:hover {
             background-color: #45a049;
+        }
+        .notes .button-group {
+            display: flex;
+            gap: 10px;
         }
     </style>
 </head>
@@ -199,9 +206,15 @@
 
     <div class="section notes">
         <h2>Notes</h2>
-        <textarea id="notes" placeholder="Add your notes here..."></textarea>
-        <br>
-        <button onclick="saveNotes()">Save Notes</button>
+        <textarea id="notes" placeholder="Add your notes here..." onchange="saveNotes()"></textarea>
+        <div class="button-group">
+            <button onclick="saveNotes()">Save Notes</button>
+            <button onclick="exportData()">Export Character</button>
+            <label for="import-file" style="display: inline-block;">
+                <button onclick="document.getElementById('import-file').click()">Import Character</button>
+            </label>
+            <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+        </div>
     </div>
 
     <script>
@@ -278,12 +291,73 @@
             document.getElementById('dice-result').textContent = result;
         }
 
+        function exportData() {
+            const data = {
+                'player-name': document.getElementById('player-name').value,
+                'constitution': document.getElementById('constitution').value,
+                'power': document.getElementById('power').value,
+                'mind': document.getElementById('mind').value,
+                'current-hp': currentHP,
+                'ability1': document.getElementById('ability1').value,
+                'ability2': document.getElementById('ability2').value,
+                'ability3': document.getElementById('ability3').value,
+                'special-ability': document.getElementById('special-ability').value,
+                'use1': document.getElementById('use1').checked,
+                'use2': document.getElementById('use2').checked,
+                'use3': document.getElementById('use3').checked,
+                'notes': document.getElementById('notes').value
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${document.getElementById('player-name').value || 'character'}_simple_sheet.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const fields = [
+                        'player-name', 'constitution', 'power', 'mind',
+                        'ability1', 'ability2', 'ability3', 'special-ability', 'notes'
+                    ];
+                    fields.forEach(field => {
+                        if (data[field] !== undefined) {
+                            document.getElementById(field).value = data[field];
+                            localStorage.setItem(field, data[field]);
+                        }
+                    });
+                    if (data['current-hp'] !== undefined) {
+                        currentHP = parseInt(data['current-hp']);
+                        localStorage.setItem('current-hp', currentHP);
+                    }
+                    ['use1', 'use2', 'use3'].forEach(use => {
+                        if (data[use] !== undefined) {
+                            document.getElementById(use).checked = data[use];
+                            localStorage.setItem(use, data[use]);
+                        }
+                    });
+                    updateStats();
+                    document.getElementById('hp-display').textContent = `${currentHP} / ${totalHP}`;
+                    alert('Character data imported successfully!');
+                } catch (err) {
+                    alert('Error importing data: Invalid JSON file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
         // Load saved data on page load
         window.onload = function() {
             const savedName = localStorage.getItem('player-name');
-            if (savedName) {
-                document.getElementById('player-name').value = savedName;
-            }
+            if (savedName) document.getElementById('player-name').value = savedName;
 
             const savedCon = localStorage.getItem('constitution');
             const savedPow = localStorage.getItem('power');
