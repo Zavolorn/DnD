@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -142,6 +103,7 @@
             padding: 8px 15px;
             border-radius: 3px;
             cursor: pointer;
+            margin: 5px;
         }
         button:hover {
             background-color: #6b3a0f;
@@ -155,6 +117,10 @@
         .proficiency input {
             width: 95%;
             padding: 5px;
+        }
+        .notes .button-group {
+            display: flex;
+            gap: 10px;
         }
     </style>
 </head>
@@ -208,7 +174,7 @@
 
         <div class="section proficiency">
             <h2>Proficiency Bonus</h2>
-            <input type="number" id="prof-bonus" min="2" max="6" value="2" onchange="updateModifiers()"> <!-- Default +2 for level 1-4 -->
+            <input type="number" id="prof-bonus" min="2" max="6" value="2" onchange="updateModifiers()">
         </div>
 
         <div class="section saving-throws">
@@ -300,15 +266,19 @@
                 <label>Level 3:</label>
                 <input type="number" id="spell-slot-3" min="0" value="0" onchange="saveData()">
             </div>
-            <!-- Add more spell slots as needed -->
             <textarea id="spells" placeholder="List known/prepared spells..." onchange="saveData()"></textarea>
         </div>
 
         <div class="section notes">
             <h2>Notes</h2>
             <textarea id="notes" placeholder="Additional notes..." onchange="saveData()"></textarea>
-            <br>
-            <button>Save Character</button>
+            <div class="button-group">
+                <button onclick="exportData()">Export Character</button>
+                <label for="import-file" style="display: inline-block;">
+                    <button onclick="document.getElementById('import-file').click()">Import Character</button>
+                </label>
+                <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+            </div>
         </div>
     </div>
 
@@ -440,6 +410,80 @@
             for (const key in data) {
                 localStorage.setItem(key, data[key]);
             }
+        }
+
+        function exportData() {
+            const data = {};
+            const fields = [
+                'char-name', 'class-level', 'background', 'race', 'alignment', 'player-name',
+                'str-score', 'dex-score', 'con-score', 'int-score', 'wis-score', 'cha-score',
+                'prof-bonus', 'max-hp', 'current-hp', 'ac', 'other-proficiencies', 'features',
+                'equipment', 'spell-ability', 'spell-slot-1', 'spell-slot-2', 'spell-slot-3', 'spells', 'notes'
+            ];
+            fields.forEach(field => {
+                data[field] = document.getElementById(field).value;
+            });
+            const checkboxes = [
+                'str-save-prof', 'dex-save-prof', 'con-save-prof', 'int-save-prof', 'wis-save-prof', 'cha-save-prof',
+                'acrobatics-prof', 'animal-handling-prof', 'arcana-prof', 'athletics-prof', 'deception-prof',
+                'history-prof', 'insight-prof', 'intimidation-prof', 'investigation-prof', 'medicine-prof',
+                'nature-prof', 'perception-prof', 'performance-prof', 'persuasion-prof', 'religion-prof',
+                'sleight-of-hand-prof', 'stealth-prof', 'survival-prof'
+            ];
+            checkboxes.forEach(checkbox => {
+                data[checkbox] = document.getElementById(checkbox).checked;
+            });
+
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${document.getElementById('char-name').value || 'character'}_sheet.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const fields = [
+                        'char-name', 'class-level', 'background', 'race', 'alignment', 'player-name',
+                        'str-score', 'dex-score', 'con-score', 'int-score', 'wis-score', 'cha-score',
+                        'prof-bonus', 'max-hp', 'current-hp', 'ac', 'other-proficiencies', 'features',
+                        'equipment', 'spell-ability', 'spell-slot-1', 'spell-slot-2', 'spell-slot-3', 'spells', 'notes'
+                    ];
+                    fields.forEach(field => {
+                        if (data[field] !== undefined) {
+                            document.getElementById(field).value = data[field];
+                            localStorage.setItem(field, data[field]);
+                        }
+                    });
+                    const checkboxes = [
+                        'str-save-prof', 'dex-save-prof', 'con-save-prof', 'int-save-prof', 'wis-save-prof', 'cha-save-prof',
+                        'acrobatics-prof', 'animal-handling-prof', 'arcana-prof', 'athletics-prof', 'deception-prof',
+                        'history-prof', 'insight-prof', 'intimidation-prof', 'investigation-prof', 'medicine-prof',
+                        'nature-prof', 'perception-prof', 'performance-prof', 'persuasion-prof', 'religion-prof',
+                        'sleight-of-hand-prof', 'stealth-prof', 'survival-prof'
+                    ];
+                    checkboxes.forEach(checkbox => {
+                        if (data[checkbox] !== undefined) {
+                            document.getElementById(checkbox).checked = data[checkbox];
+                            localStorage.setItem(checkbox, data[checkbox]);
+                        }
+                    });
+                    updateModifiers();
+                    updateHP();
+                    alert('Character data imported successfully!');
+                } catch (err) {
+                    alert('Error importing data: Invalid JSON file.');
+                }
+            };
+            reader.readAsText(file);
         }
 
         window.onload = function() {
