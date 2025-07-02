@@ -320,9 +320,9 @@
         }
 
         function updateStats() {
-            const con = parseInt(document.getElementById('constitution').value);
-            const pow = parseInt(document.getElementById('power').value);
-            const mind = parseInt(document.getElementById('mind').value);
+            const con = parseInt(document.getElementById('constitution').value) || 0;
+            const pow = parseInt(document.getElementById('power').value) || 0;
+            const mind = parseInt(document.getElementById('mind').value) || 0;
 
             // Check for unique stat values
             if (con === pow || con === mind || pow === mind) {
@@ -394,7 +394,8 @@
             const abilityEntries = document.querySelectorAll('.abilities .ability-entry');
             abilityEntries.forEach(entry => {
                 const index = entry.getAttribute('data-index');
-                abilities.push(document.getElementById(`ability-${index}`).value);
+                const value = document.getElementById(`ability-${index}`).value;
+                abilities.push(value);
             });
             localStorage.setItem('abilities', JSON.stringify(abilities));
         }
@@ -407,4 +408,222 @@
             abilityDiv.setAttribute('data-index', index);
             abilityDiv.innerHTML = `
                 <input type="text" id="special-ability-${index}" placeholder="Enter your special ability or tool" onchange="saveSpecialAbilities()">
-                < astonishingly long div innerHTML content truncated for brevity >
+                <div class="uses">
+                    <span>Uses:</span>
+                    <label><input type="checkbox" id="use1-${index}" onchange="saveSpecialAbilities()"></label>
+                    <label><input type="checkbox" id="use2-${index}" onchange="saveSpecialAbilities()"></label>
+                    <label><input type="checkbox" id="use3-${index}" onchange="saveSpecialAbilities()"></label>
+                </div>
+                <button class="remove-ability" onclick="removeAbility(${index})">-</button>
+            `;
+            container.appendChild(abilityDiv);
+            updateRemoveButtons();
+            saveSpecialAbilities();
+        }
+
+        function removeAbility(index) {
+            if (abilityCount <= 1) return; // Prevent removing the last special ability
+            const abilityDiv = document.querySelector(`.special-ability .ability-entry[data-index="${index}"]`);
+            if (abilityDiv) {
+                abilityDiv.remove();
+                abilityCount--;
+                saveSpecialAbilities();
+                updateRemoveButtons();
+            }
+        }
+
+        function updateRemoveButtons() {
+            const buttons = document.querySelectorAll('.special-ability .remove-ability');
+            buttons.forEach(button => {
+                button.style.display = abilityCount > 1 ? 'block' : 'none';
+            });
+        }
+
+        function saveSpecialAbilities() {
+            const abilities = [];
+            const abilityEntries = document.querySelectorAll('.special-ability .ability-entry');
+            abilityEntries.forEach(entry => {
+                const index = entry.getAttribute('data-index');
+                abilities.push({
+                    name: document.getElementById(`special-ability-${index}`).value,
+                    use1: document.getElementById(`use1-${index}`).checked,
+                    use2: document.getElementById(`use2-${index}`).checked,
+                    use3: document.getElementById(`use3-${index}`).checked
+                });
+            });
+            localStorage.setItem('special-abilities', JSON.stringify(abilities));
+        }
+
+        function saveNotes() {
+            const notes = document.getElementById('notes').value;
+            localStorage.setItem('notes', notes);
+            alert('Notes saved!');
+        }
+
+        function rollDice() {
+            const result = Math.floor(Math.random() * 20) + 1;
+            document.getElementById('dice-result').textContent = result;
+        }
+
+        function exportData() {
+            const data = {
+                'player-name': document.getElementById('player-name').value,
+                'constitution': document.getElementById('constitution').value,
+                'power': document.getElementById('power').value,
+                'mind': document.getElementById('mind').value,
+                'current-hp': currentHP,
+                'abilities': JSON.parse(localStorage.getItem('abilities') || '[]'),
+                'special-abilities': JSON.parse(localStorage.getItem('special-abilities') || '[]'),
+                'notes': document.getElementById('notes').value
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${document.getElementById('player-name').value || 'character'}_simple_sheet.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const fields = ['player-name', 'constitution', 'power', 'mind', 'notes'];
+                    fields.forEach(field => {
+                        if (data[field] !== undefined) {
+                            document.getElementById(field).value = data[field];
+                            localStorage.setItem(field, data[field]);
+                        }
+                    });
+                    if (data['current-hp'] !== undefined) {
+                        currentHP = parseInt(data['current-hp']);
+                        localStorage.setItem('current-hp', currentHP);
+                    }
+                    if (data['abilities']) {
+                        const container = document.getElementById('abilities-container');
+                        container.innerHTML = '';
+                        weaponCount = 0;
+                        data['abilities'].forEach((ability, index) => {
+                            const weaponDiv = document.createElement('div');
+                            weaponDiv.className = 'ability-entry';
+                            weaponDiv.setAttribute('data-index', index);
+                            weaponDiv.innerHTML = `
+                                <input type="text" id="ability-${index}" placeholder="Ability or Weapon ${index + 1}" value="${ability || ''}" onchange="saveAbilities()">
+                                <button class="remove-ability" onclick="removeWeapon(${index})">-</button>
+                            `;
+                            container.appendChild(weaponDiv);
+                            weaponCount = index + 1;
+                        });
+                        localStorage.setItem('abilities', JSON.stringify(data['abilities']));
+                        updateWeaponRemoveButtons();
+                    }
+                    if (data['special-abilities']) {
+                        const container = document.getElementById('special-abilities-container');
+                        container.innerHTML = '';
+                        abilityCount = 0;
+                        data['special-abilities'].forEach((ability, index) => {
+                            const abilityDiv = document.createElement('div');
+                            abilityDiv.className = 'ability-entry';
+                            abilityDiv.setAttribute('data-index', index);
+                            abilityDiv.innerHTML = `
+                                <input type="text" id="special-ability-${index}" placeholder="Enter your special ability or tool" value="${ability.name || ''}" onchange="saveSpecialAbilities()">
+                                <div class="uses">
+                                    <span>Uses:</span>
+                                    <label><input type="checkbox" id="use1-${index}" ${ability.use1 ? 'checked' : ''} onchange="saveSpecialAbilities()"></label>
+                                    <label><input type="checkbox" id="use2-${index}" ${ability.use2 ? 'checked' : ''} onchange="saveSpecialAbilities()"></label>
+                                    <label><input type="checkbox" id="use3-${index}" ${ability.use3 ? 'checked' : ''} onchange="saveSpecialAbilities()"></label>
+                                </div>
+                                <button class="remove-ability" onclick="removeAbility(${index})">-</button>
+                            `;
+                            container.appendChild(abilityDiv);
+                            abilityCount = index + 1;
+                        });
+                        localStorage.setItem('special-abilities', JSON.stringify(data['special-abilities']));
+                        updateRemoveButtons();
+                    }
+                    updateStats();
+                    document.getElementById('hp-display').textContent = `${currentHP} / ${totalHP}`;
+                    alert('Character data imported successfully!');
+                } catch (err) {
+                    alert('Error importing data: Invalid JSON file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Load saved data on page load
+        window.onload = function() {
+            const savedName = localStorage.getItem('player-name');
+            if (savedName) document.getElementById('player-name').value = savedName;
+
+            const savedCon = localStorage.getItem('constitution');
+            const savedPow = localStorage.getItem('power');
+            const savedMind = localStorage.getItem('mind');
+            if (savedCon !== null) document.getElementById('constitution').value = savedCon;
+            if (savedPow !== null) document.getElementById('power').value = savedPow;
+            if (savedMind !== null) document.getElementById('mind').value = savedMind;
+
+            const savedAbilities = localStorage.getItem('abilities');
+            if (savedAbilities) {
+                const abilities = JSON.parse(savedAbilities);
+                const container = document.getElementById('abilities-container');
+                container.innerHTML = '';
+                weaponCount = 0;
+                abilities.forEach((ability, index) => {
+                    const weaponDiv = document.createElement('div');
+                    weaponDiv.className = 'ability-entry';
+                    weaponDiv.setAttribute('data-index', index);
+                    weaponDiv.innerHTML = `
+                        <input type="text" id="ability-${index}" placeholder="Ability or Weapon ${index + 1}" value="${ability || ''}" onchange="saveAbilities()">
+                        <button class="remove-ability" onclick="removeWeapon(${index})">-</button>
+                    `;
+                    container.appendChild(weaponDiv);
+                    weaponCount = index + 1;
+                });
+                updateWeaponRemoveButtons();
+            }
+
+            const savedSpecialAbilities = localStorage.getItem('special-abilities');
+            if (savedSpecialAbilities) {
+                const abilities = JSON.parse(savedSpecialAbilities);
+                const container = document.getElementById('special-abilities-container');
+                container.innerHTML = '';
+                abilityCount = 0;
+                abilities.forEach((ability, index) => {
+                    const abilityDiv = document.createElement('div');
+                    abilityDiv.className = 'ability-entry';
+                    abilityDiv.setAttribute('data-index', index);
+                    abilityDiv.innerHTML = `
+                        <input type="text" id="special-ability-${index}" placeholder="Enter your special ability or tool" value="${ability.name || ''}" onchange="saveSpecialAbilities()">
+                        <div class="uses">
+                            <span>Uses:</span>
+                            <label><input type="checkbox" id="use1-${index}" ${ability.use1 ? 'checked' : ''} onchange="saveSpecialAbilities()"></label>
+                            <label><input type="checkbox" id="use2-${index}" ${ability.use2 ? 'checked' : ''} onchange="saveSpecialAbilities()"></label>
+                            <label><input type="checkbox" id="use3-${index}" ${ability.use3 ? 'checked' : ''} onchange="saveSpecialAbilities()"></label>
+                        </div>
+                        <button class="remove-ability" onclick="removeAbility(${index})">-</button>
+                    `;
+                    container.appendChild(abilityDiv);
+                    abilityCount = index + 1;
+                });
+                updateRemoveButtons();
+            }
+
+            updateStats();
+            const savedHP = localStorage.getItem('current-hp');
+            if (savedHP !== null) {
+                currentHP = parseInt(savedHP);
+                document.getElementById('hp-display').textContent = `${currentHP} / ${totalHP}`;
+            }
+
+            const savedNotes = localStorage.getItem('notes');
+            if (savedNotes !== null) document.getElementById('notes').value = savedNotes;
+        };
+    </script>
+</body>
+</html>
