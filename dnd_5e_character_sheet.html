@@ -1,0 +1,475 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D 5E Character Sheet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5dc; /* Parchment-like background */
+            color: #333;
+        }
+        .sheet {
+            background-color: #fff;
+            border: 2px solid #8b4513;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #d3d3d3;
+            border-radius: 5px;
+        }
+        h1, h2 {
+            font-family: 'Georgia', serif;
+            color: #8b4513;
+            margin: 0 0 10px;
+        }
+        .character-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .character-info input, .character-info select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #8b4513;
+            border-radius: 3px;
+        }
+        .ability-scores {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+        .ability {
+            border: 1px solid #8b4513;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .ability input {
+            width: 50px;
+            text-align: center;
+            margin: 5px 0;
+        }
+        .saving-throws, .skills {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .saving-throw, .skill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .combat-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+        .combat-stats input {
+            width: 80%;
+            padding: 5px;
+            text-align: center;
+        }
+        .features, .equipment, .spells, .notes {
+            display: flex;
+            flex-direction: column;
+        }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 5px;
+            border: 1px solid #8b4513;
+            border-radius: 3px;
+        }
+        .spell-slot {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        button {
+            background-color: #8b4513;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #6b3a0f;
+        }
+        input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+        .proficiency {
+            margin: 10px 0;
+        }
+        .proficiency input {
+            width: 95%;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sheet">
+        <h1>D&D 5th Edition Character Sheet</h1>
+
+        <div class="section character-info">
+            <h2>Character Info</h2>
+            <input type="text" id="char-name" placeholder="Character Name" onchange="saveData()">
+            <input type="text" id="class-level" placeholder="Class & Level (e.g., Wizard 3)" onchange="saveData()">
+            <input type="text" id="background" placeholder="Background" onchange="saveData()">
+            <input type="text" id="race" placeholder="Race" onchange="saveData()">
+            <input type="text" id="alignment" placeholder="Alignment" onchange="saveData()">
+            <input type="text" id="player-name" placeholder="Player Name" onchange="saveData()">
+        </div>
+
+        <div class="section ability-scores">
+            <h2>Ability Scores</h2>
+            <div class="ability">
+                <label>Strength</label>
+                <input type="number" id="str-score" min="1" max="20" value="10" onchange="updateModifiers()">
+                <p>Modifier: <span id="str-mod">+0</span></p>
+            </div>
+            <div class="ability">
+                <label>Dexterity</label>
+                <input type="number" id="dex-score" min="1" max="20" value="10" onchange="updateModifiers()">
+                <p>Modifier: <span id="dex-mod">+0</span></p>
+            </div>
+            <div class="ability">
+                <label>Constitution</label>
+                <input type="number" id="con-score" min="1" max="20" value="10" onchange="updateModifiers()">
+                <p>Modifier: <span id="con-mod">+0</span></p>
+            </div>
+            <div class="ability">
+                <label>Intelligence</label>
+                <input type="number" id="int-score" min="1" max="20" value="10" onchange="updateModifiers()">
+                <p>Modifier: <span id="int-mod">+0</span></p>
+            </div>
+            <div class="ability">
+                <label>Wisdom</label>
+                <input type="number" id="wis-score" min="1" max="20" value="10" onchange="updateModifiers()">
+                <p>Modifier: <span id="wis-mod">+0</span></p>
+            </div>
+            <div class="ability">
+                <label>Charisma</label>
+                <input type="number" id="cha-score" min="1" max="20" value="10" onchange="updateModifiers()">
+                <p>Modifier: <span id="cha-mod">+0</span></p>
+            </div>
+        </div>
+
+        <div class="section proficiency">
+            <h2>Proficiency Bonus</h2>
+            <input type="number" id="prof-bonus" min="2" max="6" value="2" onchange="updateModifiers()"> <!-- Default +2 for level 1-4 -->
+        </div>
+
+        <div class="section saving-throws">
+            <h2>Saving Throws</h2>
+            <div class="saving-throw"><input type="checkbox" id="str-save-prof" onchange="updateModifiers()"> <label>Strength: <span id="str-save">+0</span></label></div>
+            <div class="saving-throw"><input type="checkbox" id="dex-save-prof" onchange="updateModifiers()"> <label>Dexterity: <span id="dex-save">+0</span></label></div>
+            <div class="saving-throw"><input type="checkbox" id="con-save-prof" onchange="updateModifiers()"> <label>Constitution: <span id="con-save">+0</span></label></div>
+            <div class="saving-throw"><input type="checkbox" id="int-save-prof" onchange="updateModifiers()"> <label>Intelligence: <span id="int-save">+0</span></label></div>
+            <div class="saving-throw"><input type="checkbox" id="wis-save-prof" onchange="updateModifiers()"> <label>Wisdom: <span id="wis-save">+0</span></label></div>
+            <div class="saving-throw"><input type="checkbox" id="cha-save-prof" onchange="updateModifiers()"> <label>Charisma: <span id="cha-save">+0</span></label></div>
+        </div>
+
+        <div class="section skills">
+            <h2>Skills</h2>
+            <div class="skill"><input type="checkbox" id="acrobatics-prof" onchange="updateModifiers()"> <label>Acrobatics (Dex): <span id="acrobatics">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="animal-handling-prof" onchange="updateModifiers()"> <label>Animal Handling (Wis): <span id="animal-handling">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="arcana-prof" onchange="updateModifiers()"> <label>Arcana (Int): <span id="arcana">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="athletics-prof" onchange="updateModifiers()"> <label>Athletics (Str): <span id="athletics">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="deception-prof" onchange="updateModifiers()"> <label>Deception (Cha): <span id="deception">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="history-prof" onchange="updateModifiers()"> <label>History (Int): <span id="history">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="insight-prof" onchange="updateModifiers()"> <label>Insight (Wis): <span id="insight">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="intimidation-prof" onchange="updateModifiers()"> <label>Intimidation (Cha): <span id="intimidation">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="investigation-prof" onchange="updateModifiers()"> <label>Investigation (Int): <span id="investigation">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="medicine-prof" onchange="updateModifiers()"> <label>Medicine (Wis): <span id="medicine">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="nature-prof" onchange="updateModifiers()"> <label>Nature (Int): <span id="nature">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="perception-prof" onchange="updateModifiers()"> <label>Perception (Wis): <span id="perception">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="performance-prof" onchange="updateModifiers()"> <label>Performance (Cha): <span id="performance">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="persuasion-prof" onchange="updateModifiers()"> <label>Persuasion (Cha): <span id="persuasion">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="religion-prof" onchange="updateModifiers()"> <label>Religion (Int): <span id="religion">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="sleight-of-hand-prof" onchange="updateModifiers()"> <label>Sleight of Hand (Dex): <span id="sleight-of-hand">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="stealth-prof" onchange="updateModifiers()"> <label>Stealth (Dex): <span id="stealth">+0</span></label></div>
+            <div class="skill"><input type="checkbox" id="survival-prof" onchange="updateModifiers()"> <label>Survival (Wis): <span id="survival">+0</span></label></div>
+        </div>
+
+        <div class="section combat-stats">
+            <h2>Combat Stats</h2>
+            <div>
+                <label>Max HP</label>
+                <input type="number" id="max-hp" min="1" value="10" onchange="updateHP()">
+            </div>
+            <div>
+                <label>Current HP</label>
+                <input type="number" id="current-hp" min="0" value="10" onchange="saveData()">
+            </div>
+            <div>
+                <label>Armor Class</label>
+                <input type="number" id="ac" min="1" value="10" onchange="saveData()">
+            </div>
+            <div>
+                <label>Initiative</label>
+                <p><span id="initiative">+0</span></p>
+            </div>
+        </div>
+
+        <div class="section proficiencies">
+            <h2>Proficiencies</h2>
+            <textarea id="other-proficiencies" placeholder="Weapons, Armor, Tools, Languages..." onchange="saveData()"></textarea>
+        </div>
+
+        <div class="section features">
+            <h2>Features & Traits</h2>
+            <textarea id="features" placeholder="Class features, racial traits, feats..." onchange="saveData()"></textarea>
+        </div>
+
+        <div class="section equipment">
+            <h2>Equipment</h2>
+            <textarea id="equipment" placeholder="Weapons, armor, items, gold..." onchange="saveData()"></textarea>
+        </div>
+
+        <div class="section spells">
+            <h2>Spellcasting</h2>
+            <label>Spellcasting Ability: </label>
+            <select id="spell-ability" onchange="updateModifiers()">
+                <option value="int">Intelligence</option>
+                <option value="wis">Wisdom</option>
+                <option value="cha">Charisma</option>
+            </select>
+            <p>Spell Save DC: <span id="spell-dc">8</span> | Spell Attack Bonus: <span id="spell-attack">+0</span></p>
+            <h3>Spell Slots</h3>
+            <div class="spell-slot">
+                <label>Level 1:</label>
+                <input type="number" id="spell-slot-1" min="0" value="0" onchange="saveData()">
+            </div>
+            <div class="spell-slot">
+                <label>Level 2:</label>
+                <input type="number" id="spell-slot-2" min="0" value="0" onchange="saveData()">
+            </div>
+            <div class="spell-slot">
+                <label>Level 3:</label>
+                <input type="number" id="spell-slot-3" min="0" value="0" onchange="saveData()">
+            </div>
+            <!-- Add more spell slots as needed -->
+            <textarea id="spells" placeholder="List known/prepared spells..." onchange="saveData()"></textarea>
+        </div>
+
+        <div class="section notes">
+            <h2>Notes</h2>
+            <textarea id="notes" placeholder="Additional notes..." onchange="saveData()"></textarea>
+            <br>
+            <button>Save Character</button>
+        </div>
+    </div>
+
+    <script>
+        function calculateModifier(score) {
+            return Math.floor((score - 10) / 2);
+        }
+
+        function updateModifiers() {
+            const profBonus = parseInt(document.getElementById('prof-bonus').value) || 2;
+            const scores = {
+                str: parseInt(document.getElementById('str-score').value) || 10,
+                dex: parseInt(document.getElementById('dex-score').value) || 10,
+                con: parseInt(document.getElementById('con-score').value) || 10,
+                int: parseInt(document.getElementById('int-score').value) || 10,
+                wis: parseInt(document.getElementById('wis-score').value) || 10,
+                cha: parseInt(document.getElementById('cha-score').value) || 10
+            };
+
+            // Update ability modifiers
+            const modifiers = {
+                str: calculateModifier(scores.str),
+                dex: calculateModifier(scores.dex),
+                con: calculateModifier(scores.con),
+                int: calculateModifier(scores.int),
+                wis: calculateModifier(scores.wis),
+                cha: calculateModifier(scores.cha)
+            };
+
+            document.getElementById('str-mod').textContent = modifiers.str >= 0 ? `+${modifiers.str}` : modifiers.str;
+            document.getElementById('dex-mod').textContent = modifiers.dex >= 0 ? `+${modifiers.dex}` : modifiers.dex;
+            document.getElementById('con-mod').textContent = modifiers.con >= 0 ? `+${modifiers.con}` : modifiers.con;
+            document.getElementById('int-mod').textContent = modifiers.int >= 0 ? `+${modifiers.int}` : modifiers.int;
+            document.getElementById('wis-mod').textContent = modifiers.wis >= 0 ? `+${modifiers.wis}` : modifiers.wis;
+            document.getElementById('cha-mod').textContent = modifiers.cha >= 0 ? `+${modifiers.cha}` : modifiers.cha;
+
+            // Update saving throws
+            document.getElementById('str-save').textContent = (modifiers.str + (document.getElementById('str-save-prof').checked ? profBonus : 0)) >= 0 ? `+${modifiers.str + (document.getElementById('str-save-prof').checked ? profBonus : 0)}` : modifiers.str + (document.getElementById('str-save-prof').checked ? profBonus : 0);
+            document.getElementById('dex-save').textContent = (modifiers.dex + (document.getElementById('dex-save-prof').checked ? profBonus : 0)) >= 0 ? `+${modifiers.dex + (document.getElementById('dex-save-prof').checked ? profBonus : 0)}` : modifiers.dex + (document.getElementById('dex-save-prof').checked ? profBonus : 0);
+            document.getElementById('con-save').textContent = (modifiers.con + (document.getElementById('con-save-prof').checked ? profBonus : 0)) >= 0 ? `+${modifiers.con + (document.getElementById('con-save-prof').checked ? profBonus : 0)}` : modifiers.con + (document.getElementById('con-save-prof').checked ? profBonus : 0);
+            document.getElementById('int-save').textContent = (modifiers.int + (document.getElementById('int-save-prof').checked ? profBonus : 0)) >= 0 ? `+${modifiers.int + (document.getElementById('int-save-prof').checked ? profBonus : 0)}` : modifiers.int + (document.getElementById('int-save-prof').checked ? profBonus : 0);
+            document.getElementById('wis-save').textContent = (modifiers.wis + (document.getElementById('wis-save-prof').checked ? profBonus : 0)) >= 0 ? `+${modifiers.wis + (document.getElementById('wis-save-prof').checked ? profBonus : 0)}` : modifiers.wis + (document.getElementById('wis-save-prof').checked ? profBonus : 0);
+            document.getElementById('cha-save').textContent = (modifiers.cha + (document.getElementById('cha-save-prof').checked ? profBonus : 0)) >= 0 ? `+${modifiers.cha + (document.getElementById('cha-save-prof').checked ? profBonus : 0)}` : modifiers.cha + (document.getElementById('cha-save-prof').checked ? profBonus : 0);
+
+            // Update skills
+            const skills = {
+                'acrobatics': 'dex', 'animal-handling': 'wis', 'arcana': 'int', 'athletics': 'str',
+                'deception': 'cha', 'history': 'int', 'insight': 'wis', 'intimidation': 'cha',
+                'investigation': 'int', 'medicine': 'wis', 'nature': 'int', 'perception': 'wis',
+                'performance': 'cha', 'persuasion': 'cha', 'religion': 'int', 'sleight-of-hand': 'dex',
+                'stealth': 'dex', 'survival': 'wis'
+            };
+            for (const skill in skills) {
+                const mod = modifiers[skills[skill]] + (document.getElementById(`${skill}-prof`).checked ? profBonus : 0);
+                document.getElementById(skill).textContent = mod >= 0 ? `+${mod}` : mod;
+            }
+
+            // Update initiative
+            document.getElementById('initiative').textContent = modifiers.dex >= 0 ? `+${modifiers.dex}` : modifiers.dex;
+
+            // Update spellcasting
+            const spellAbility = document.getElementById('spell-ability').value;
+            const spellMod = modifiers[spellAbility];
+            document.getElementById('spell-dc').textContent = 8 + profBonus + spellMod;
+            document.getElementById('spell-attack').textContent = (profBonus + spellMod) >= 0 ? `+${profBonus + spellMod}` : profBonus + spellMod;
+
+            saveData();
+        }
+
+        function updateHP() {
+            const maxHP = parseInt(document.getElementById('max-hp').value) || 10;
+            const currentHP = parseInt(document.getElementById('current-hp').value) || maxHP;
+            document.getElementById('current-hp').value = Math.min(currentHP, maxHP);
+            saveData();
+        }
+
+        function saveData() {
+            const data = {
+                'char-name': document.getElementById('char-name').value,
+                'class-level': document.getElementById('class-level').value,
+                'background': document.getElementById('background').value,
+                'race': document.getElementById('race').value,
+                'alignment': document.getElementById('alignment').value,
+                'player-name': document.getElementById('player-name').value,
+                'str-score': document.getElementById('str-score').value,
+                'dex-score': document.getElementById('dex-score').value,
+                'con-score': document.getElementById('con-score').value,
+                'int-score': document.getElementById('int-score').value,
+                'wis-score': document.getElementById('wis-score').value,
+                'cha-score': document.getElementById('cha-score').value,
+                'prof-bonus': document.getElementById('prof-bonus').value,
+                'str-save-prof': document.getElementById('str-save-prof').checked,
+                'dex-save-prof': document.getElementById('dex-save-prof').checked,
+                'con-save-prof': document.getElementById('con-save-prof').checked,
+                'int-save-prof': document.getElementById('int-save-prof').checked,
+                'wis-save-prof': document.getElementById('wis-save-prof').checked,
+                'cha-save-prof': document.getElementById('cha-save-prof').checked,
+                'acrobatics-prof': document.getElementById('acrobatics-prof').checked,
+                'animal-handling-prof': document.getElementById('animal-handling-prof').checked,
+                'arcana-prof': document.getElementById('arcana-prof').checked,
+                'athletics-prof': document.getElementById('athletics-prof').checked,
+                'deception-prof': document.getElementById('deception-prof').checked,
+                'history-prof': document.getElementById('history-prof').checked,
+                'insight-prof': document.getElementById('insight-prof').checked,
+                'intimidation-prof': document.getElementById('intimidation-prof').checked,
+                'investigation-prof': document.getElementById('investigation-prof').checked,
+                'medicine-prof': document.getElementById('medicine-prof').checked,
+                'nature-prof': document.getElementById('nature-prof').checked,
+                'perception-prof': document.getElementById('perception-prof').checked,
+                'performance-prof': document.getElementById('performance-prof').checked,
+                'persuasion-prof': document.getElementById('persuasion-prof').checked,
+                'religion-prof': document.getElementById('religion-prof').checked,
+                'sleight-of-hand-prof': document.getElementById('sleight-of-hand-prof').checked,
+                'stealth-prof': document.getElementById('stealth-prof').checked,
+                'survival-prof': document.getElementById('survival-prof').checked,
+                'max-hp': document.getElementById('max-hp').value,
+                'current-hp': document.getElementById('current-hp').value,
+                'ac': document.getElementById('ac').value,
+                'other-proficiencies': document.getElementById('other-proficiencies').value,
+                'features': document.getElementById('features').value,
+                'equipment': document.getElementById('equipment').value,
+                'spell-ability': document.getElementById('spell-ability').value,
+                'spell-slot-1': document.getElementById('spell-slot-1').value,
+                'spell-slot-2': document.getElementById('spell-slot-2').value,
+                'spell-slot-3': document.getElementById('spell-slot-3').value,
+                'spells': document.getElementById('spells').value,
+                'notes': document.getElementById('notes').value
+            };
+            for (const key in data) {
+                localStorage.setItem(key, data[key]);
+            }
+        }
+
+        window.onload = function() {
+            const fields = [
+                'char-name', 'class-level', 'background', 'race', 'alignment', 'player-name',
+                'str-score', 'dex-score', 'con-score', 'int-score', 'wis-score', 'cha-score',
+                'prof-bonus', 'max-hp', 'current-hp', 'ac', 'other-proficiencies', 'features',
+                'equipment', 'spell-ability', 'spell-slot-1', 'spell-slot-2', 'spell-slot-3', 'spells', 'notes'
+            ];
+            fields.forEach(field => {
+                const value = localStorage.getItem(field);
+                if (value !== null) {
+                    document.getElementById(field).value = value;
+                }
+            });
+
+            const checkboxes = [
+                'str-save-prof', 'dex-save-prof', 'con-save-prof', 'int-save-prof', 'wis-save-prof', 'cha-save-prof',
+                'acrobatics-prof', 'animal-handling-prof', 'arcana-prof', 'athletics-prof', 'deception-prof',
+                'history-prof', 'insight-prof', 'intimidation-prof', 'investigation-prof', 'medicine-prof',
+                'nature-prof', 'perception-prof', 'performance-prof', 'persuasion-prof', 'religion-prof',
+                'sleight-of-hand-prof', 'stealth-prof', 'survival-prof'
+            ];
+            checkboxes.forEach(checkbox => {
+                document.getElementById(checkbox).checked = localStorage.getItem(checkbox) === 'true';
+            });
+
+            updateModifiers();
+            updateHP();
+        };
+    </script>
+</body>
+</html>
