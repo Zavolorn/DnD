@@ -28,8 +28,7 @@
             width: 94.5%;
             padding: 5px;
             margin-bottom: 0px;
-            align-items:left;
-          margin-left: 1.7%;
+            margin-left: 1.7%;
         }
         .stat select {
             margin-left: 10px;
@@ -193,9 +192,9 @@
 
     <div class="section dice-roller">
         <h2>Dice Roller (d20)</h2>
-              <p align=left><i>Rolling 1 yields great failure!</i></p>
+        <p align="left"><i>Rolling 1 yields great failure!</i></p>
         <button class="dice-button" id="dice-button" onclick="rollDice()"><span id="dice-result">-</span></button>
-              <p align=Right><i>Rolling 20 yields great success!</i></p>
+        <p align="right"><i>Rolling 20 yields great success!</i></p>
     </div>
 
     <div class="section notes">
@@ -237,7 +236,6 @@
             document.getElementById('damage').textContent = damage;
 
             // Update effectiveness based on Mind
-            const mind = 0 + mind;
             document.getElementById('effectiveness').textContent = mind;
 
             // Save stats to local storage
@@ -283,18 +281,20 @@
         // Load saved data on page load
         window.onload = function() {
             const savedName = localStorage.getItem('player-name');
-            if (savedName) document.getElementById('player-name').value = savedName;
+            if (savedName) {
+                document.getElementById('player-name').value = savedName;
+            }
 
             const savedCon = localStorage.getItem('constitution');
             const savedPow = localStorage.getItem('power');
             const savedMind = localStorage.getItem('mind');
-            if (savedCon) document.getElementById('constitution').value = savedCon;
-            if (savedPow) document.getElementById('power').value = savedPow;
-            if (savedMind) document.getElementById('mind').value = savedMind;
+            if (savedCon !== null) document.getElementById('constitution').value = savedCon;
+            if (savedPow !== null) document.getElementById('power').value = savedPow;
+            if (savedMind !== null) document.getElementById('mind').value = savedMind;
             updateStats();
 
             const savedHP = localStorage.getItem('current-hp');
-            if (savedHP) {
+            if (savedHP !== null) {
                 currentHP = parseInt(savedHP);
                 document.getElementById('hp-display').textContent = `${currentHP} / ${totalHP}`;
             }
@@ -302,18 +302,18 @@
             const savedAbility1 = localStorage.getItem('ability1');
             const savedAbility2 = localStorage.getItem('ability2');
             const savedAbility3 = localStorage.getItem('ability3');
-            if (savedAbility1) document.getElementById('ability1').value = savedAbility1;
-            if (savedAbility2) document.getElementById('ability2').value = savedAbility2;
-            if (savedAbility3) document.getElementById('ability3').value = savedAbility3;
+            if (savedAbility1 !== null) document.getElementById('ability1').value = savedAbility1;
+            if (savedAbility2 !== null) document.getElementById('ability2').value = savedAbility2;
+            if (savedAbility3 !== null) document.getElementById('ability3').value = savedAbility3;
 
             const savedSpecial = localStorage.getItem('special-ability');
-            if (savedSpecial) document.getElementById('special-ability').value = savedSpecial;
+            if (savedSpecial !== null) document.getElementById('special-ability').value = savedSpecial;
             document.getElementById('use1').checked = localStorage.getItem('use1') === 'true';
             document.getElementById('use2').checked = localStorage.getItem('use2') === 'true';
             document.getElementById('use3').checked = localStorage.getItem('use3') === 'true';
 
             const savedNotes = localStorage.getItem('notes');
-            if (savedNotes) document.getElementById('notes').value = savedNotes;
+            if (savedNotes !== null) document.getElementById('notes').value = savedNotes;
         };
     </script>
 </body>
