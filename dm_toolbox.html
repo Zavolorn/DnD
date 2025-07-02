@@ -180,6 +180,29 @@
         .npc-row {
             background-color: #FFE6E6; /* Light red tint for NPC */
         }
+        .current-turn {
+            border: 3px solid #FFFF00; /* Yellow border for current turn */
+        }
+        .time-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .stopwatch, .countdown, .initiative-tracker {
+            margin-bottom: 15px;
+        }
+        .stopwatch span, .countdown span, .initiative-tracker span {
+            font-size: 14px;
+            color: #4B0082;
+            margin-right: 10px;
+        }
+        .countdown input[type="number"] {
+            width: 60px;
+            padding: 4px;
+            border: 1px solid #4B0082;
+            border-radius: 3px;
+        }
         @media screen and (max-width: 600px) {
             body {
                 padding: 5px;
@@ -198,6 +221,10 @@
             .participant-details input[type="number"] {
                 width: 30px;
             }
+            .countdown input[type="number"] {
+                width: 40px;
+                font-size: 10px;
+            }
             button {
                 padding: 3px 6px;
                 font-size: 10px;
@@ -212,6 +239,12 @@
                 min-width: 50px;
                 height: 24px;
                 line-height: 24px;
+            }
+            .stopwatch span, .countdown span, .initiative-tracker span {
+                font-size: 12px;
+            }
+            .time-controls {
+                gap: 5px;
             }
         }
     </style>
@@ -281,13 +314,117 @@
         <div class="clear"></div>
     </div>
 
+    <div class="section time-initiative-tracker">
+        <h2>TIME & INITIATIVE TRACKER</h2>
+        <div class="stopwatch">
+            <span id="stopwatch-display">00:00.0</span>
+            <div class="time-controls">
+                <button onclick="pauseResumeStopwatch()">PAUSE/RESUME</button>
+                <button onclick="resetStopwatch()">RESET</button>
+            </div>
+        </div>
+        <div class="countdown">
+            <span id="countdown-display">05:00</span>
+            <input type="number" id="countdown-minutes" min="0" max="60" value="5" onchange="resetCountdown()">
+            <span>MINUTES</span>
+            <div class="time-controls">
+                <button onclick="pauseResumeCountdown()">START/PAUSE</button>
+                <button onclick="resetCountdown()">RESET</button>
+            </div>
+        </div>
+        <div class="initiative-tracker">
+            <span id="current-turn">NO ACTIVE TURN</span>
+            <div class="time-controls">
+                <button onclick="startCombat()">START COMBAT</button>
+                <button onclick="previousTurn()">PREVIOUS</button>
+                <button onclick="nextTurn()">NEXT</button>
+                <button onclick="endCombat()">END COMBAT</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let participantCount = 1;
+        let initiativeOrder = [0]; // Initialize with first participant
+        let currentTurnIndex = -1;
+        let stopwatchInterval = null;
+        let stopwatchTime = 0;
+        let stopwatchRunning = false;
+        let countdownInterval = null;
+        let countdownTime = 5 * 60; // Default 5 minutes in seconds
+        let countdownRunning = false;
 
         function rollD20() {
             const result = Math.floor(Math.random() * 20) + 1;
             const button = document.querySelector('.d20-roll');
             button.textContent = result;
+        }
+
+        function formatTime(seconds, tenths = false) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            const tenthsStr = tenths ? `.${Math.floor((seconds % 1) * 10)}` : '';
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}${tenthsStr}`;
+        }
+
+        function startStopwatch() {
+            if (!stopwatchRunning) {
+                stopwatchRunning = true;
+                stopwatchInterval = setInterval(() => {
+                    stopwatchTime += 0.1;
+                    document.getElementById('stopwatch-display').textContent = formatTime(stopwatchTime, true);
+                }, 100);
+            }
+        }
+
+        function pauseResumeStopwatch() {
+            if (stopwatchRunning) {
+                clearInterval(stopwatchInterval);
+                stopwatchRunning = false;
+            } else {
+                startStopwatch();
+            }
+        }
+
+        function resetStopwatch() {
+            clearInterval(stopwatchInterval);
+            stopwatchRunning = false;
+            stopwatchTime = 0;
+            document.getElementById('stopwatch-display').textContent = '00:00.0';
+        }
+
+        function startCountdown() {
+            if (!countdownRunning) {
+                countdownRunning = true;
+                countdownInterval = setInterval(() => {
+                    if (countdownTime <= 0) {
+                        clearInterval(countdownInterval);
+                        countdownRunning = false;
+                        document.getElementById('countdown-display').textContent = '00:00';
+                        alert('COUNTDOWN FINISHED!');
+                        return;
+                    }
+                    countdownTime--;
+                    document.getElementById('countdown-display').textContent = formatTime(countdownTime);
+                }, 1000);
+            }
+        }
+
+        function pauseResumeCountdown() {
+            if (countdownRunning) {
+                clearInterval(countdownInterval);
+                countdownRunning = false;
+            } else {
+                startCountdown();
+            }
+        }
+
+        function resetCountdown() {
+            clearInterval(countdownInterval);
+            countdownRunning = false;
+            const input = document.getElementById('countdown-minutes');
+            countdownTime = Math.max(0, Math.min(60, parseInt(input.value) || 5)) * 60;
+            document.getElementById('countdown-display').textContent = formatTime(countdownTime);
         }
 
         function updateParticipant(index) {
@@ -300,6 +437,7 @@
                 row.classList.add('npc-row');
             }
             saveParticipants();
+            updateInitiativeTracker();
         }
 
         function changeHP(index, amount) {
@@ -347,8 +485,10 @@
                 <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
             `;
             tableBody.appendChild(row);
+            initiativeOrder.push(index); // Add new participant to initiative order
             updateRemoveButtons();
             saveParticipants();
+            updateInitiativeTracker();
         }
 
         function removeParticipant(index) {
@@ -357,8 +497,13 @@
             if (row) {
                 row.remove();
                 participantCount--;
+                initiativeOrder = initiativeOrder.filter(i => i !== index); // Remove from initiative order
+                if (currentTurnIndex >= initiativeOrder.length) {
+                    currentTurnIndex = initiativeOrder.length - 1;
+                }
                 updateRemoveButtons();
                 saveParticipants();
+                updateInitiativeTracker();
             }
         }
 
@@ -390,14 +535,65 @@
         function sortByInitiative() {
             const tableBody = document.getElementById('combat-table-body');
             const rows = Array.from(document.querySelectorAll('.participant'));
-            rows.sort((a, b) => {
-                const initA = parseInt(document.getElementById(`initiative-${a.getAttribute('data-index')}`).value) || 0;
-                const initB = parseInt(document.getElementById(`initiative-${b.getAttribute('data-index')}`).value) || 0;
-                return initB - initA; // Descending order
-            });
+            const rowData = rows.map(row => ({
+                element: row,
+                index: parseInt(row.getAttribute('data-index')),
+                initiative: parseInt(document.getElementById(`initiative-${row.getAttribute('data-index')}`).value) || 0
+            }));
+            rowData.sort((a, b) => b.initiative - a.initiative); // Descending order
+            initiativeOrder = rowData.map(data => data.index);
             tableBody.innerHTML = '';
-            rows.forEach(row => tableBody.appendChild(row));
+            rowData.forEach(data => tableBody.appendChild(data.element));
             saveParticipants();
+            currentTurnIndex = -1;
+            updateInitiativeTracker();
+        }
+
+        function startCombat() {
+            sortByInitiative();
+            if (initiativeOrder.length > 0) {
+                currentTurnIndex = 0;
+                updateInitiativeTracker();
+            }
+        }
+
+        function endCombat() {
+            initiativeOrder = [];
+            currentTurnIndex = -1;
+            updateInitiativeTracker();
+            const rows = document.querySelectorAll('.participant');
+            rows.forEach(row => row.classList.remove('current-turn'));
+        }
+
+        function updateInitiativeTracker() {
+            const currentTurnDisplay = document.getElementById('current-turn');
+            const rows = document.querySelectorAll('.participant');
+            rows.forEach(row => row.classList.remove('current-turn'));
+            if (initiativeOrder.length === 0 || currentTurnIndex < 0 || currentTurnIndex >= initiativeOrder.length) {
+                currentTurnDisplay.textContent = 'NO ACTIVE TURN';
+                return;
+            }
+            const currentIndex = initiativeOrder[currentTurnIndex];
+            const currentRow = document.querySelector(`.participant[data-index="${currentIndex}"]`);
+            if (currentRow) {
+                const name = document.getElementById(`name-${currentIndex}`).value || 'UNNAMED';
+                currentTurnDisplay.textContent = `${name}'S TURN`;
+                currentRow.classList.add('current-turn');
+            } else {
+                currentTurnDisplay.textContent = 'NO ACTIVE TURN';
+            }
+        }
+
+        function nextTurn() {
+            if (initiativeOrder.length === 0) return;
+            currentTurnIndex = (currentTurnIndex + 1) % initiativeOrder.length;
+            updateInitiativeTracker();
+        }
+
+        function previousTurn() {
+            if (initiativeOrder.length === 0) return;
+            currentTurnIndex = (currentTurnIndex - 1 + initiativeOrder.length) % initiativeOrder.length;
+            updateInitiativeTracker();
         }
 
         function exportData() {
@@ -425,6 +621,7 @@
                         const tableBody = document.getElementById('combat-table-body');
                         tableBody.innerHTML = '';
                         participantCount = 0;
+                        initiativeOrder = [];
                         data['combat-participants'].forEach((participant, index) => {
                             const row = document.createElement('tr');
                             row.className = `participant ${participant.type === 'NPC' ? 'npc-row' : ''}`;
@@ -458,10 +655,12 @@
                                 <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
                             `;
                             tableBody.appendChild(row);
+                            initiativeOrder.push(index);
                             participantCount = index + 1;
                         });
                         localStorage.setItem('combat-participants', JSON.stringify(data['combat-participants']));
                         updateRemoveButtons();
+                        updateInitiativeTracker();
                         alert('COMBAT TRACKER DATA IMPORTED SUCCESSFULLY!');
                     }
                 } catch (err) {
@@ -479,6 +678,7 @@
                 const tableBody = document.getElementById('combat-table-body');
                 tableBody.innerHTML = '';
                 participantCount = 0;
+                initiativeOrder = [];
                 participants.forEach((participant, index) => {
                     const row = document.createElement('tr');
                     row.className = `participant ${participant.type === 'NPC' ? 'npc-row' : ''}`;
@@ -512,9 +712,11 @@
                         <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
                     `;
                     tableBody.appendChild(row);
+                    initiativeOrder.push(index);
                     participantCount = index + 1;
                 });
                 updateRemoveButtons();
+                updateInitiativeTracker();
             }
         };
     </script>
