@@ -3,89 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D&D DM Toolbox</title>
+    <title>D&D DM TOOLBOX</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: Arial, sans-serif;
-            max-width: 650px;
+            max-width: 100%;
             margin: 10px auto;
-            padding: 20px;
-            background-color: #f5f5dc; /* Parchment background */
+            padding: 10px;
+            background-color: #2F004F; /* Very dark purple, almost black */
             color: #333;
+            text-transform: uppercase !important;
         }
         .section {
             margin: 10px;
             background-color: #E6E6FA; /* Light purple background */
-            padding: 15px;
+            padding: 10px;
             border-radius: 5px;
             border: 1px solid #4B0082; /* Deep purple border */
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .section h1, .section h2 {
+        .section h1 {
+            font-family: 'Georgia', serif;
+            color: #FFFFFF; /* White title text */
+            margin-top: 0;
+        }
+        .section h2 {
             font-family: 'Georgia', serif;
             color: #4B0082; /* Deep purple text */
             margin-top: 0;
         }
+        .table-container {
+            overflow-x: auto;
+            max-width: 100%;
+        }
         table {
             width: 100%;
+            max-width: 100%;
             border-collapse: collapse;
             margin-bottom: 10px;
         }
         th, td {
             border: 1px solid #4B0082; /* Deep purple border */
-            padding: 8px;
+            padding: 6px;
             text-align: left;
         }
         th {
             background-color: #4B0082; /* Deep purple */
             color: white;
+            resize: horizontal;
+            overflow: auto;
         }
-        th.type { width: 80px; }
-        th.name { min-width: 200px; width: auto; }
-        th.hp { width: 140px; }
-        th.ac { width: 40px; }
-        th.initiative { width: 40px; }
+        th.type { min-width: 50px; }
+        th.name { min-width: 250px; }
+        th.initiative { min-width: 40px; }
         th.remove { width: 50px; }
         input[type="text"] {
             width: 100%;
             min-width: 100%;
-            box-sizing: border-box;
-            padding: 5px;
+            padding: 4px;
             border: 1px solid #4B0082;
             border-radius: 3px;
             white-space: nowrap;
+            overflow: auto;
+            text-transform: uppercase;
         }
         input[type="number"] {
-            width: 90%;
-            padding: 5px;
+            width: 100%;
+            padding: 4px;
             border: 1px solid #4B0082;
             border-radius: 3px;
+            text-transform: uppercase;
         }
-        .hp-controls input[type="number"] {
-            width: 50px;
+        .participant-details input[type="number"] {
+            width: 25px;
             display: inline-block;
         }
         input[type="radio"] {
-            margin: 0 5px;
+            margin: 0 3px;
         }
-        .hp-controls {
+        input::placeholder {
+            text-transform: uppercase;
+        }
+        .participant-details {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
-            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+            justify-content: space-between;
         }
-        .hp-controls .buttons {
+        .hp-container {
             display: flex;
             flex-direction: column;
             gap: 5px;
+        }
+        .hp-inputs {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+        .buttons {
+            display: flex;
+            gap: 3px;
+            justify-content: flex-start;
+        }
+        .ac-container {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            border-left: 1px solid #4B0082; /* Vertical separator */
+            padding-left: 10px;
         }
         button {
             background-color: #4B0082; /* Deep purple */
             color: white;
             border: none;
             border-radius: 3px;
-            padding: 5px 10px;
+            padding: 4px 8px;
             cursor: pointer;
+            font-size: 12px;
+            text-transform: uppercase;
         }
         button:hover {
             background-color: #6A5ACD; /* Lighter purple for hover */
@@ -96,72 +135,123 @@
         .remove-participant:hover {
             background-color: #b71c1c;
         }
-        .add-participant, .sort-initiative {
-            background-color: #4B0082;
-            padding: 8px 15px;
-            margin: 5px;
+        .sort-initiative {
+            margin-left: 5px;
+            padding: 2px 6px;
+            font-size: 10px;
         }
-        .add-participant:hover, .sort-initiative:hover {
-            background-color: #6A5ACD;
+        .table-footer-left {
+            float: left;
+            margin: 5px 0;
         }
-        .button-group {
+        .table-footer-right {
+            float: right;
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        .clear {
+            clear: both;
+        }
+        @media screen and (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+            .section {
+                padding: 8px;
+                margin: 5px;
+            }
+            th, td {
+                padding: 4px;
+            }
+            input[type="text"], input[type="number"] {
+                padding: 3px;
+                font-size: 12px;
+            }
+            .participant-details input[type="number"] {
+                width: 20px;
+            }
+            button {
+                padding: 3px 6px;
+                font-size: 10px;
+            }
+            .sort-initiative {
+                padding: 2px 4px;
+                font-size: 9px;
+            }
+            .participant-details {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .ac-container {
+                border-left: none;
+                border-top: 1px solid #4B0082;
+                padding-left: 0;
+                padding-top: 5px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="title">
-        <h1>D&D DM Toolbox</h1>
+        <h1>D&D DM TOOLBOX</h1>
     </div>
 
     <div class="section combat-tracker">
-        <h2>Combat Tracker</h2>
-        <table id="combat-table">
-            <thead>
-                <tr>
-                    <th class="type">Type</th>
-                    <th class="name">Name</th>
-                    <th class="hp">HP</th>
-                    <th class="ac">AC</th>
-                    <th class="initiative">Init</th>
-                    <th class="remove"></th>
-                </tr>
-            </thead>
-            <tbody id="combat-table-body">
-                <tr class="participant" data-index="0">
-                    <td>
-                        <label><input type="radio" name="type-0" value="PC" checked onchange="updateParticipant(0)"> PC</label>
-                        <label><input type="radio" name="type-0" value="NPC" onchange="updateParticipant(0)"> NPC</label>
-                    </td>
-                    <td><input type="text" id="name-0" placeholder="Name" onchange="saveParticipants()"></td>
-                    <td>
-                        <div class="hp-controls">
-                            <input type="number" id="current-hp-0" min="0" value="10" onchange="saveParticipants()">
-                            <span>/</span>
-                            <input type="number" id="total-hp-0" min="1" value="10" onchange="saveParticipants()">
-                            <div class="buttons">
-                                <button onclick="changeHP(0, 1)">+1</button>
-                                <button onclick="changeHP(0, -1)">-1</button>
+        <h2>COMBAT TRACKER</h2>
+        <div class="table-container">
+            <table id="combat-table">
+                <thead>
+                    <tr>
+                        <th class="type resizable">TYPE</th>
+                        <th class="name resizable">NAME</th>
+                        <th class="initiative resizable">INIT <button class="sort-initiative" onclick="sortByInitiative()">SORT</button></th>
+                        <th class="remove"></th>
+                    </tr>
+                </thead>
+                <tbody id="combat-table-body">
+                    <tr class="participant" data-index="0">
+                        <td>
+                            <label><input type="radio" name="type-0" value="PC" checked onchange="updateParticipant(0)"> PC</label>
+                            <label><input type="radio" name="type-0" value="NPC" onchange="updateParticipant(0)"> NPC</label>
+                        </td>
+                        <td>
+                            <input type="text" id="name-0" placeholder="NAME" onchange="saveParticipants()">
+                            <div class="participant-details">
+                                <div class="hp-container">
+                                    <div class="hp-inputs">
+                                        <input type="number" id="current-hp-0" min="0" value="10" onchange="saveParticipants()">
+                                        <span>/</span>
+                                        <input type="number" id="total-hp-0" min="1" value="10" onchange="saveParticipants()">
+                                    </div>
+                                    <div class="buttons">
+                                        <button onclick="changeHP(0, -1)">-1</button>
+                                        <button onclick="changeHP(0, 1)">+1</button>
+                                    </div>
+                                </div>
+                                <div class="ac-container">
+                                    <span>AC:</span>
+                                    <input type="number" id="ac-0" min="0" value="10" style="display: none;" placeholder="AC" onchange="saveParticipants()">
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                    <td><input type="number" id="ac-0" min="0" value="10" style="display: none;" onchange="saveParticipants()"></td>
-                    <td><input type="number" id="initiative-0" value="0" onchange="saveParticipants()"></td>
-                    <td><button class="remove-participant" onclick="removeParticipant(0)" style="display: none;">-</button></td>
-                </tr>
-            </tbody>
-        </table>
-        <div class="button-group">
-            <button class="add-participant" onclick="addParticipant()">+ Add Participant</button>
-            <button class="sort-initiative" onclick="sortByInitiative()">Sort by Initiative</button>
-            <button onclick="exportData()">Export Tracker</button>
+                        </td>
+                        <td><input type="number" id="initiative-0" value="0" onchange="saveParticipants()"></td>
+                        <td><button class="remove-participant" onclick="removeParticipant(0)" style="display: none;">-</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-footer-left">
+            <button class="add-participant" onclick="addParticipant()">+ ADD PARTICIPANT</button>
+        </div>
+        <div class="table-footer-right">
+            <button onclick="exportData()">EXPORT TRACKER</button>
             <label for="import-file" style="display: inline-block;">
-                <button onclick="document.getElementById('import-file').click()">Import Tracker</button>
+                <button onclick="document.getElementById('import-file').click()">IMPORT TRACKER</button>
             </label>
             <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
         </div>
+        <div class="clear"></div>
     </div>
 
     <script>
@@ -195,19 +285,26 @@
                     <label><input type="radio" name="type-${index}" value="PC" checked onchange="updateParticipant(${index})"> PC</label>
                     <label><input type="radio" name="type-${index}" value="NPC" onchange="updateParticipant(${index})"> NPC</label>
                 </td>
-                <td><input type="text" id="name-${index}" placeholder="Name" onchange="saveParticipants()"></td>
                 <td>
-                    <div class="hp-controls">
-                        <input type="number" id="current-hp-${index}" min="0" value="10" onchange="saveParticipants()">
-                        <span>/</span>
-                        <input type="number" id="total-hp-${index}" min="1" value="10" onchange="saveParticipants()">
-                        <div class="buttons">
-                            <button onclick="changeHP(${index}, 1)">+1</button>
-                            <button onclick="changeHP(${index}, -1)">-1</button>
+                    <input type="text" id="name-${index}" placeholder="NAME" onchange="saveParticipants()">
+                    <div class="participant-details">
+                        <div class="hp-container">
+                            <div class="hp-inputs">
+                                <input type="number" id="current-hp-${index}" min="0" value="10" onchange="saveParticipants()">
+                                <span>/</span>
+                                <input type="number" id="total-hp-${index}" min="1" value="10" onchange="saveParticipants()">
+                            </div>
+                            <div class="buttons">
+                                <button onclick="changeHP(${index}, -1)">-1</button>
+                                <button onclick="changeHP(${index}, 1)">+1</button>
+                            </div>
+                        </div>
+                        <div class="ac-container">
+                            <span>AC:</span>
+                            <input type="number" id="ac-${index}" min="0" value="10" style="display: none;" placeholder="AC" onchange="saveParticipants()">
                         </div>
                     </div>
                 </td>
-                <td><input type="number" id="ac-${index}" min="0" value="10" style="display: none;" onchange="saveParticipants()"></td>
                 <td><input type="number" id="initiative-${index}" value="0" onchange="saveParticipants()"></td>
                 <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
             `;
@@ -299,19 +396,26 @@
                                     <label><input type="radio" name="type-${index}" value="PC" ${participant.type === 'PC' ? 'checked' : ''} onchange="updateParticipant(${index})"> PC</label>
                                     <label><input type="radio" name="type-${index}" value="NPC" ${participant.type === 'NPC' ? 'checked' : ''} onchange="updateParticipant(${index})"> NPC</label>
                                 </td>
-                                <td><input type="text" id="name-${index}" placeholder="Name" value="${participant.name || ''}" onchange="saveParticipants()"></td>
                                 <td>
-                                    <div class="hp-controls">
-                                        <input type="number" id="current-hp-${index}" min="0" value="${participant.currentHP || 10}" onchange="saveParticipants()">
-                                        <span>/</span>
-                                        <input type="number" id="total-hp-${index}" min="1" value="${participant.totalHP || 10}" onchange="saveParticipants()">
-                                        <div class="buttons">
-                                            <button onclick="changeHP(${index}, 1)">+1</button>
-                                            <button onclick="changeHP(${index}, -1)">-1</button>
+                                    <input type="text" id="name-${index}" placeholder="NAME" value="${participant.name || ''}" onchange="saveParticipants()">
+                                    <div class="participant-details">
+                                        <div class="hp-container">
+                                            <div class="hp-inputs">
+                                                <input type="number" id="current-hp-${index}" min="0" value="${participant.currentHP || 10}" onchange="saveParticipants()">
+                                                <span>/</span>
+                                                <input type="number" id="total-hp-${index}" min="1" value="${participant.totalHP || 10}" onchange="saveParticipants()">
+                                            </div>
+                                            <div class="buttons">
+                                                <button onclick="changeHP(${index}, -1)">-1</button>
+                                                <button onclick="changeHP(${index}, 1)">+1</button>
+                                            </div>
+                                        </div>
+                                        <div class="ac-container">
+                                            <span>AC:</span>
+                                            <input type="number" id="ac-${index}" min="0" value="${participant.ac || 10}" style="display: ${participant.type === 'NPC' ? 'block' : 'none'};" placeholder="AC" onchange="saveParticipants()">
                                         </div>
                                     </div>
                                 </td>
-                                <td><input type="number" id="ac-${index}" min="0" value="${participant.ac || 10}" style="display: ${participant.type === 'NPC' ? 'block' : 'none'};" onchange="saveParticipants()"></td>
                                 <td><input type="number" id="initiative-${index}" value="${participant.initiative || 0}" onchange="saveParticipants()"></td>
                                 <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
                             `;
@@ -320,10 +424,10 @@
                         });
                         localStorage.setItem('combat-participants', JSON.stringify(data['combat-participants']));
                         updateRemoveButtons();
-                        alert('Combat tracker data imported successfully!');
+                        alert('COMBAT TRACKER DATA IMPORTED SUCCESSFULLY!');
                     }
                 } catch (err) {
-                    alert('Error importing data: Invalid JSON file.');
+                    alert('ERROR IMPORTING DATA: INVALID JSON FILE.');
                 }
             };
             reader.readAsText(file);
@@ -346,19 +450,26 @@
                             <label><input type="radio" name="type-${index}" value="PC" ${participant.type === 'PC' ? 'checked' : ''} onchange="updateParticipant(${index})"> PC</label>
                             <label><input type="radio" name="type-${index}" value="NPC" ${participant.type === 'NPC' ? 'checked' : ''} onchange="updateParticipant(${index})"> NPC</label>
                         </td>
-                        <td><input type="text" id="name-${index}" placeholder="Name" value="${participant.name || ''}" onchange="saveParticipants()"></td>
                         <td>
-                            <div class="hp-controls">
-                                <input type="number" id="current-hp-${index}" min="0" value="${participant.currentHP || 10}" onchange="saveParticipants()">
-                                <span>/</span>
-                                <input type="number" id="total-hp-${index}" min="1" value="${participant.totalHP || 10}" onchange="saveParticipants()">
-                                <div class="buttons">
-                                    <button onclick="changeHP(${index}, 1)">+1</button>
-                                    <button onclick="changeHP(${index}, -1)">-1</button>
+                            <input type="text" id="name-${index}" placeholder="NAME" value="${participant.name || ''}" onchange="saveParticipants()">
+                            <div class="participant-details">
+                                <div class="hp-container">
+                                    <div class="hp-inputs">
+                                        <input type="number" id="current-hp-${index}" min="0" value="${participant.currentHP || 10}" onchange="saveParticipants()">
+                                        <span>/</span>
+                                        <input type="number" id="total-hp-${index}" min="1" value="${participant.totalHP || 10}" onchange="saveParticipants()">
+                                    </div>
+                                    <div class="buttons">
+                                        <button onclick="changeHP(${index}, -1)">-1</button>
+                                        <button onclick="changeHP(${index}, 1)">+1</button>
+                                    </div>
+                                </div>
+                                <div class="ac-container">
+                                    <span>AC:</span>
+                                    <input type="number" id="ac-${index}" min="0" value="${participant.ac || 10}" style="display: ${participant.type === 'NPC' ? 'block' : 'none'};" placeholder="AC" onchange="saveParticipants()">
                                 </div>
                             </div>
                         </td>
-                        <td><input type="number" id="ac-${index}" min="0" value="${participant.ac || 10}" style="display: ${participant.type === 'NPC' ? 'block' : 'none'};" onchange="saveParticipants()"></td>
                         <td><input type="number" id="initiative-${index}" value="${participant.initiative || 0}" onchange="saveParticipants()"></td>
                         <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
                     `;
