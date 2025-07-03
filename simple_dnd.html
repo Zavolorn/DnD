@@ -325,7 +325,7 @@
                 <input type="text" id="trait-0" placeholder="TRAIT" onchange="saveCharacter()">
                 <button class="remove-button" onclick="removeTrait(0)" style="display: none;">-</button>
             </div>
-            <button onclick="addTrait()">+ ADD TRAIT</button>
+            <button class="add-button" onclick="addTrait()">+ ADD TRAIT</button>
         </div>
         <div class="identity-section flaws">
             <h3>FLAWS</h3>
@@ -333,7 +333,7 @@
                 <input type="text" id="flaw-0" placeholder="FLAW" onchange="saveCharacter()">
                 <button class="remove-button" onclick="removeFlaw(0)" style="display: none;">-</button>
             </div>
-            <button onclick="addFlaw()">+ ADD FLAW</button>
+            <button class="add-button" onclick="addFlaw()">+ ADD FLAW</button>
         </div>
         <div class="identity-section aspirations">
             <h3>ASPIRATIONS</h3>
@@ -341,7 +341,7 @@
                 <input type="text" id="aspiration-0" placeholder="ASPIRATION" onchange="saveCharacter()">
                 <button class="remove-button" onclick="removeAspiration(0)" style="display: none;">-</button>
             </div>
-            <button onclick="addAspiration()">+ ADD ASPIRATION</button>
+            <button class="add-button" onclick="addAspiration()">+ ADD ASPIRATION</button>
         </div>
         <div class="info-content" id="identity-info">
             Traits, flaws, and aspirations shape your character’s personality and goals. Traits are positive qualities (e.g., “brave”), flaws are weaknesses (e.g., “impulsive”), and aspirations are goals (e.g., “save village”). Add at least one of each.
@@ -395,7 +395,7 @@
                 <input type="text" id="gear-0" placeholder="WEAPON/TOOL/ITEM" onchange="saveCharacter()">
                 <button class="remove-button" onclick="removeGear(0)" style="display: none;">-</button>
             </div>
-            <button onclick="addGear()">+ ADD GEAR</button>
+            <button class="add-button" onclick="addGear()">+ ADD GEAR</button>
         </div>
         <div class="info-content" id="gear-info">
             Gear includes your character’s weapons, tools, or items (e.g., “sword,” “shield”). Add items you carry or use in adventures. At least one item is required.
@@ -414,7 +414,7 @@
                 <input type="text" id="ability-0" placeholder="SPELL/ABILITY/FEATURE/SKILL" onchange="saveCharacter()">
                 <button class="remove-button" onclick="removeAbility(0)" style="display: none;">-</button>
             </div>
-            <button onclick="addAbility()">+ ADD ABILITY</button>
+            <button class="add-button" onclick="addAbility()">+ ADD ABILITY</button>
         </div>
         <div class="info-content" id="abilities-info">
             Abilities/feats list your character’s spells, skills, or special abilities (e.g., “fireball,” “dodge”). Add at least one to define what your character can do.
@@ -485,7 +485,7 @@
             try {
                 const container = document.querySelector('.traits');
                 if (!container) throw new Error('Traits container not found');
-                const addButton = container.querySelector('button');
+                const addButton = container.querySelector('.add-button');
                 if (!addButton) throw new Error('Add Trait button not found');
                 const index = traitCount++;
                 const item = document.createElement('div');
@@ -506,7 +506,10 @@
 
         function removeTrait(index) {
             try {
-                if (traitCount <= 1) return;
+                if (traitCount <= 1) {
+                    console.log('Cannot remove last trait; minimum one required');
+                    return;
+                }
                 const item = document.querySelector(`.traits .item[data-index="${index}"]`);
                 if (!item) throw new Error(`Trait item ${index} not found`);
                 item.remove();
@@ -523,7 +526,7 @@
             try {
                 const container = document.querySelector('.flaws');
                 if (!container) throw new Error('Flaws container not found');
-                const addButton = container.querySelector('button');
+                const addButton = container.querySelector('.add-button');
                 if (!addButton) throw new Error('Add Flaw button not found');
                 const index = flawCount++;
                 const item = document.createElement('div');
@@ -544,7 +547,10 @@
 
         function removeFlaw(index) {
             try {
-                if (flawCount <= 1) return;
+                if (flawCount <= 1) {
+                    console.log('Cannot remove last flaw; minimum one required');
+                    return;
+                }
                 const item = document.querySelector(`.flaws .item[data-index="${index}"]`);
                 if (!item) throw new Error(`Flaw item ${index} not found`);
                 item.remove();
@@ -561,7 +567,7 @@
             try {
                 const container = document.querySelector('.aspirations');
                 if (!container) throw new Error('Aspirations container not found');
-                const addButton = container.querySelector('button');
+                const addButton = container.querySelector('.add-button');
                 if (!addButton) throw new Error('Add Aspiration button not found');
                 const index = aspirationCount++;
                 const item = document.createElement('div');
@@ -582,7 +588,10 @@
 
         function removeAspiration(index) {
             try {
-                if (aspirationCount <= 1) return;
+                if (aspirationCount <= 1) {
+                    console.log('Cannot remove last aspiration; minimum one required');
+                    return;
+                }
                 const item = document.querySelector(`.aspirations .item[data-index="${index}"]`);
                 if (!item) throw new Error(`Aspiration item ${index} not found`);
                 item.remove();
@@ -599,7 +608,7 @@
             try {
                 const container = document.querySelector('.gear-section');
                 if (!container) throw new Error('Gear container not found');
-                const addButton = container.querySelector('button');
+                const addButton = container.querySelector('.add-button');
                 if (!addButton) throw new Error('Add Gear button not found');
                 const index = gearCount++;
                 const item = document.createElement('div');
@@ -620,7 +629,10 @@
 
         function removeGear(index) {
             try {
-                if (gearCount <= 1) return;
+                if (gearCount <= 1) {
+                    console.log('Cannot remove last gear; minimum one required');
+                    return;
+                }
                 const item = document.querySelector(`.gear-section .item[data-index="${index}"]`);
                 if (!item) throw new Error(`Gear item ${index} not found`);
                 item.remove();
@@ -637,7 +649,7 @@
             try {
                 const container = document.querySelector('.abilities-section');
                 if (!container) throw new Error('Abilities container not found');
-                const addButton = container.querySelector('button');
+                const addButton = container.querySelector('.add-button');
                 if (!addButton) throw new Error('Add Ability button not found');
                 const index = abilityCount++;
                 const item = document.createElement('div');
@@ -658,7 +670,10 @@
 
         function removeAbility(index) {
             try {
-                if (abilityCount <= 1) return;
+                if (abilityCount <= 1) {
+                    console.log('Cannot remove last ability; minimum one required');
+                    return;
+                }
                 const item = document.querySelector(`.abilities-section .item[data-index="${index}"]`);
                 if (!item) throw new Error(`Ability item ${index} not found`);
                 item.remove();
@@ -739,23 +754,28 @@
                 };
                 document.querySelectorAll('.traits .item').forEach(item => {
                     const index = item.getAttribute('data-index');
-                    character.traits.push(document.getElementById(`trait-${index}`).value);
+                    const input = document.getElementById(`trait-${index}`);
+                    if (input) character.traits.push(input.value);
                 });
                 document.querySelectorAll('.flaws .item').forEach(item => {
                     const index = item.getAttribute('data-index');
-                    character.flaws.push(document.getElementById(`flaw-${index}`).value);
+                    const input = document.getElementById(`flaw-${index}`);
+                    if (input) character.flaws.push(input.value);
                 });
                 document.querySelectorAll('.aspirations .item').forEach(item => {
                     const index = item.getAttribute('data-index');
-                    character.aspirations.push(document.getElementById(`aspiration-${index}`).value);
+                    const input = document.getElementById(`aspiration-${index}`);
+                    if (input) character.aspirations.push(input.value);
                 });
                 document.querySelectorAll('.gear-section .item').forEach(item => {
                     const index = item.getAttribute('data-index');
-                    character.gear.push(document.getElementById(`gear-${index}`).value);
+                    const input = document.getElementById(`gear-${index}`);
+                    if (input) character.gear.push(input.value);
                 });
                 document.querySelectorAll('.abilities-section .item').forEach(item => {
                     const index = item.getAttribute('data-index');
-                    character.abilities.push(document.getElementById(`ability-${index}`).value);
+                    const input = document.getElementById(`ability-${index}`);
+                    if (input) character.abilities.push(input.value);
                 });
                 localStorage.setItem('character', JSON.stringify(character));
                 console.log('Character saved:', character);
@@ -813,7 +833,7 @@
                             traitsContainer.appendChild(item);
                             traitCount = index + 1;
                         });
-                        traitsContainer.innerHTML += '<button onclick="addTrait()">+ ADD TRAIT</button>';
+                        traitsContainer.innerHTML += '<button class="add-button" onclick="addTrait()">+ ADD TRAIT</button>';
                         updateRemoveButtons('trait');
 
                         // Clear and rebuild flaws
@@ -831,7 +851,7 @@
                             flawsContainer.appendChild(item);
                             flawCount = index + 1;
                         });
-                        flawsContainer.innerHTML += '<button onclick="addFlaw()">+ ADD FLAW</button>';
+                        flawsContainer.innerHTML += '<button class="add-button" onclick="addFlaw()">+ ADD FLAW</button>';
                         updateRemoveButtons('flaw');
 
                         // Clear and rebuild aspirations
@@ -849,7 +869,7 @@
                             aspirationsContainer.appendChild(item);
                             aspirationCount = index + 1;
                         });
-                        aspirationsContainer.innerHTML += '<button onclick="addAspiration()">+ ADD ASPIRATION</button>';
+                        aspirationsContainer.innerHTML += '<button class="add-button" onclick="addAspiration()">+ ADD ASPIRATION</button>';
                         updateRemoveButtons('aspiration');
 
                         // Clear and rebuild gear
@@ -867,7 +887,7 @@
                             gearContainer.appendChild(item);
                             gearCount = index + 1;
                         });
-                        gearContainer.innerHTML += '<button onclick="addGear()">+ ADD GEAR</button>';
+                        gearContainer.innerHTML += '<button class="add-button" onclick="addGear()">+ ADD GEAR</button>';
                         updateRemoveButtons('gear');
 
                         // Clear and rebuild abilities
@@ -885,7 +905,7 @@
                             abilitiesContainer.appendChild(item);
                             abilityCount = index + 1;
                         });
-                        abilitiesContainer.innerHTML += '<button onclick="addAbility()">+ ADD ABILITY</button>';
+                        abilitiesContainer.innerHTML += '<button class="add-button" onclick="addAbility()">+ ADD ABILITY</button>';
                         updateRemoveButtons('ability');
 
                         localStorage.setItem('character', JSON.stringify(character));
@@ -932,7 +952,7 @@
                         traitsContainer.appendChild(item);
                         traitCount = index + 1;
                     });
-                    traitsContainer.innerHTML += '<button onclick="addTrait()">+ ADD TRAIT</button>';
+                    traitsContainer.innerHTML += '<button class="add-button" onclick="addTrait()">+ ADD TRAIT</button>';
                     updateRemoveButtons('trait');
 
                     // Load flaws
@@ -950,7 +970,7 @@
                         flawsContainer.appendChild(item);
                         flawCount = index + 1;
                     });
-                    flawsContainer.innerHTML += '<button onclick="addFlaw()">+ ADD FLAW</button>';
+                    flawsContainer.innerHTML += '<button class="add-button" onclick="addFlaw()">+ ADD FLAW</button>';
                     updateRemoveButtons('flaw');
 
                     // Load aspirations
@@ -968,7 +988,7 @@
                         aspirationsContainer.appendChild(item);
                         aspirationCount = index + 1;
                     });
-                    aspirationsContainer.innerHTML += '<button onclick="addAspiration()">+ ADD ASPIRATION</button>';
+                    aspirationsContainer.innerHTML += '<button class="add-button" onclick="addAspiration()">+ ADD ASPIRATION</button>';
                     updateRemoveButtons('aspiration');
 
                     // Load gear
@@ -986,7 +1006,7 @@
                         gearContainer.appendChild(item);
                         gearCount = index + 1;
                     });
-                    gearContainer.innerHTML += '<button onclick="addGear()">+ ADD GEAR</button>';
+                    gearContainer.innerHTML += '<button class="add-button" onclick="addGear()">+ ADD GEAR</button>';
                     updateRemoveButtons('gear');
 
                     // Load abilities
@@ -1004,7 +1024,7 @@
                         abilitiesContainer.appendChild(item);
                         abilityCount = index + 1;
                     });
-                    abilitiesContainer.innerHTML += '<button onclick="addAbility()">+ ADD ABILITY</button>';
+                    abilitiesContainer.innerHTML += '<button class="add-button" onclick="addAbility()">+ ADD ABILITY</button>';
                     updateRemoveButtons('ability');
                     console.log('Character loaded from localStorage');
                 }
