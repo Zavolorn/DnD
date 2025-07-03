@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>SIMPLE D&D CHARACTER SHEET</title>
     <style>
         * {
@@ -60,6 +60,11 @@
             font-size: 10px;
             text-transform: uppercase;
             font-family: 'Georgia', serif;
+            touch-action: manipulation;
+            min-width: 24px;
+            min-height: 24px;
+            position: relative;
+            z-index: 1;
         }
         .info-toggle:hover {
             background-color: #A0522D;
@@ -102,6 +107,11 @@
             font-size: 12px;
             text-transform: uppercase;
             font-family: 'Georgia', serif;
+            touch-action: manipulation;
+            min-width: 24px;
+            min-height: 24px;
+            position: relative;
+            z-index: 1;
         }
         button:hover {
             background-color: #A0522D; /* Lighter leather */
@@ -195,6 +205,11 @@
             font-size: 16px;
             text-transform: uppercase;
             clip-path: polygon(50% 0%, 79% 9%, 94% 35%, 94% 65%, 79% 91%, 50% 100%, 21% 91%, 6% 65%, 6% 35%, 21% 9%);
+            touch-action: manipulation;
+            min-width: 50px;
+            min-height: 50px;
+            position: relative;
+            z-index: 1;
         }
         .d20-decagon:hover {
             background-color: #A0522D;
@@ -251,14 +266,19 @@
                 width: 150px;
             }
             .heart {
-                width: 50px;
-                height: 50px;
-                font-size: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 8px;
+                clip-path: path('M20 12 C8 0, 0 16, 1.2 20 C0 32, 20 40, 20 40 C20 40, 40 32, 38.8 20 C40 16, 32 0, 20 12 Z');
+            }
+            .hp-section {
+                gap: 10px;
             }
             .hp-controls button {
-                width: 25px;
-                height: 25px;
-                font-size: 14px;
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
+                line-height: 24px;
             }
             .d20-decagon {
                 width: 50px;
@@ -270,7 +290,7 @@
                 font-size: 10px;
             }
             .info-toggle {
-                padding: 2px 4px;
+                padding: 3px 6px;
                 font-size: 8px;
             }
             .info-content {
@@ -311,7 +331,7 @@
             Your character’s name and concept define their identity. Example: “Zavolorn the Healer” describes a healer named Zavolorn. Enter a name and a short description of their role or personality.
         </div>
         <div class="section-footer">
-            <button class="info-toggle" onclick="toggleInfo('character-info')">INFO</button>
+            <button class="info-toggle" id="info-character-info">INFO</button>
         </div>
     </div>
 
@@ -323,31 +343,31 @@
             <h3>TRAITS</h3>
             <div class="item" data-index="0">
                 <input type="text" id="trait-0" placeholder="TRAIT" onchange="saveCharacter()">
-                <button class="remove-button" onclick="removeTrait(0)" style="display: none;">-</button>
+                <button class="remove-button" id="remove-trait-0">-</button>
             </div>
-            <button class="add-button" onclick="addTrait()">+ ADD TRAIT</button>
+            <button class="add-button" id="add-trait">+ ADD TRAIT</button>
         </div>
         <div class="identity-section flaws">
             <h3>FLAWS</h3>
             <div class="item" data-index="0">
                 <input type="text" id="flaw-0" placeholder="FLAW" onchange="saveCharacter()">
-                <button class="remove-button" onclick="removeFlaw(0)" style="display: none;">-</button>
+                <button class="remove-button" id="remove-flaw-0">-</button>
             </div>
-            <button class="add-button" onclick="addFlaw()">+ ADD FLAW</button>
+            <button class="add-button" id="add-flaw">+ ADD FLAW</button>
         </div>
         <div class="identity-section aspirations">
             <h3>ASPIRATIONS</h3>
             <div class="item" data-index="0">
                 <input type="text" id="aspiration-0" placeholder="ASPIRATION" onchange="saveCharacter()">
-                <button class="remove-button" onclick="removeAspiration(0)" style="display: none;">-</button>
+                <button class="remove-button" id="remove-aspiration-0">-</button>
             </div>
-            <button class="add-button" onclick="addAspiration()">+ ADD ASPIRATION</button>
+            <button class="add-button" id="add-aspiration">+ ADD ASPIRATION</button>
         </div>
         <div class="info-content" id="identity-info">
             Traits, flaws, and aspirations shape your character’s personality and goals. Traits are positive qualities (e.g., “brave”), flaws are weaknesses (e.g., “impulsive”), and aspirations are goals (e.g., “save village”). Add at least one of each.
         </div>
         <div class="section-footer">
-            <button class="info-toggle" onclick="toggleInfo('identity')">INFO</button>
+            <button class="info-toggle" id="info-identity">INFO</button>
         </div>
     </div>
 
@@ -359,8 +379,8 @@
             <div class="hp-controls">
                 <div class="heart" id="hp-display">3/3</div>
                 <div>
-                    <button onclick="changeHP(-1)">-</button>
-                    <button onclick="changeHP(1)">+</button>
+                    <button id="hp-minus">-</button>
+                    <button id="hp-plus">+</button>
                 </div>
             </div>
             <div class="conditions">
@@ -382,7 +402,7 @@
             🧠 At 3 Conditions = you’re out of action (broken, dead, fled, or transformed).
         </div>
         <div class="section-footer">
-            <button class="info-toggle" onclick="toggleInfo('hp')">INFO</button>
+            <button class="info-toggle" id="info-hp">INFO</button>
         </div>
     </div>
 
@@ -393,15 +413,15 @@
         <div class="gear-section">
             <div class="item" data-index="0">
                 <input type="text" id="gear-0" placeholder="WEAPON/TOOL/ITEM" onchange="saveCharacter()">
-                <button class="remove-button" onclick="removeGear(0)" style="display: none;">-</button>
+                <button class="remove-button" id="remove-gear-0">-</button>
             </div>
-            <button class="add-button" onclick="addGear()">+ ADD GEAR</button>
+            <button class="add-button" id="add-gear">+ ADD GEAR</button>
         </div>
         <div class="info-content" id="gear-info">
             Gear includes your character’s weapons, tools, or items (e.g., “sword,” “shield”). Add items you carry or use in adventures. At least one item is required.
         </div>
         <div class="section-footer">
-            <button class="info-toggle" onclick="toggleInfo('gear')">INFO</button>
+            <button class="info-toggle" id="info-gear">INFO</button>
         </div>
     </div>
 
@@ -412,15 +432,15 @@
         <div class="abilities-section">
             <div class="item" data-index="0">
                 <input type="text" id="ability-0" placeholder="SPELL/ABILITY/FEATURE/SKILL" onchange="saveCharacter()">
-                <button class="remove-button" onclick="removeAbility(0)" style="display: none;">-</button>
+                <button class="remove-button" id="remove-ability-0">-</button>
             </div>
-            <button class="add-button" onclick="addAbility()">+ ADD ABILITY</button>
+            <button class="add-button" id="add-ability">+ ADD ABILITY</button>
         </div>
         <div class="info-content" id="abilities-info">
             Abilities/feats list your character’s spells, skills, or special abilities (e.g., “fireball,” “dodge”). Add at least one to define what your character can do.
         </div>
         <div class="section-footer">
-            <button class="info-toggle" onclick="toggleInfo('abilities')">INFO</button>
+            <button class="info-toggle" id="info-abilities">INFO</button>
         </div>
     </div>
 
@@ -428,13 +448,13 @@
         <div class="section-header">
             <h2>DICE ROLLER (D20)</h2>
         </div>
-        <button class="d20-decagon" id="d20-result" onclick="rollD20()">ROLL</button>
+        <button class="d20-decagon" id="d20-result">ROLL</button>
         <div class="dice-result" id="dice-message"></div>
         <div class="info-content" id="dice-roller-info">
             Roll a 20-sided die (d20) to determine the success of actions. Click the decagon to roll. A 1 is a “dire failure” (bad outcome), and a 20 is a “great success” (excellent outcome).
         </div>
         <div class="section-footer">
-            <button class="info-toggle" onclick="toggleInfo('dice-roller')">INFO</button>
+            <button class="info-toggle" id="info-dice-roller">INFO</button>
         </div>
     </div>
 
@@ -444,11 +464,11 @@
         </div>
         <textarea id="notes" placeholder="ENTER NOTES HERE" onchange="saveCharacter()"></textarea>
         <div class="notes-footer">
-            <button onclick="saveCharacter()">SAVE NOTES</button>
+            <button id="save-notes">SAVE NOTES</button>
             <div class="notes-footer-right">
-                <button onclick="exportCharacter()">EXPORT CHARACTER</button>
+                <button id="export-character">EXPORT CHARACTER</button>
                 <label for="import-file" style="display: inline-block;">
-                    <button onclick="document.getElementById('import-file').click()">IMPORT CHARACTER</button>
+                    <button id="import-character">IMPORT CHARACTER</button>
                 </label>
                 <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importCharacter(event)">
             </div>
@@ -458,7 +478,7 @@
             Use notes to record extra details, campaign events, or character backstory. Save notes to store them, and use export/import to save or load your entire character.
         </div>
         <div class="section-footer">
-            <button class="info-toggle" onclick="toggleInfo('notes')">INFO</button>
+            <button class="info-toggle" id="info-notes">INFO</button>
         </div>
     </div>
 
@@ -469,16 +489,50 @@
         let gearCount = 1;
         let abilityCount = 1;
 
+        // Helper function to add click and touchstart events
+        function addEvent(element, handler, id) {
+            if (!element) {
+                console.error(`Element not found for ${id}`);
+                return;
+            }
+            // Prevent duplicate events
+            element.removeEventListener('click', handler);
+            element.removeEventListener('touchstart', handler);
+            element.addEventListener('click', (e) => {
+                e.preventDefault();
+                handler(e);
+                console.log(`${id} clicked`);
+            });
+            element.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handler(e);
+                console.log(`${id} touched`);
+            });
+        }
+
         function toggleInfo(sectionId) {
-            const info = document.getElementById(`${sectionId}-info`);
-            info.style.display = info.style.display === 'block' ? 'none' : 'block';
+            try {
+                const info = document.getElementById(`${sectionId}-info`);
+                if (!info) throw new Error(`Info content not found for ${sectionId}`);
+                info.style.display = info.style.display === 'block' ? 'none' : 'block';
+                console.log(`Toggled info for ${sectionId}`);
+            } catch (err) {
+                console.error(`Error in toggleInfo for ${sectionId}:`, err);
+            }
         }
 
         function updateCharacterName() {
-            const name = document.getElementById('name').value;
-            const concept = document.getElementById('concept').value;
-            document.getElementById('full-name').textContent = name && concept ? `${name} THE ${concept}` : '';
-            saveCharacter();
+            try {
+                const name = document.getElementById('name').value;
+                const concept = document.getElementById('concept').value;
+                const fullName = document.getElementById('full-name');
+                if (!fullName) throw new Error('Full name element not found');
+                fullName.textContent = name && concept ? `${name} THE ${concept}` : '';
+                saveCharacter();
+                console.log('Character name updated');
+            } catch (err) {
+                console.error('Error in updateCharacterName:', err);
+            }
         }
 
         function addTrait() {
@@ -493,10 +547,11 @@
                 item.setAttribute('data-index', index);
                 item.innerHTML = `
                     <input type="text" id="trait-${index}" placeholder="TRAIT" onchange="saveCharacter()">
-                    <button class="remove-button" onclick="removeTrait(${index})">-</button>
+                    <button class="remove-button" id="remove-trait-${index}">-</button>
                 `;
                 container.insertBefore(item, addButton);
                 updateRemoveButtons('trait');
+                addEvent(document.getElementById(`remove-trait-${index}`), () => removeTrait(index), `remove-trait-${index}`);
                 saveCharacter();
                 console.log(`Added trait-${index}`);
             } catch (err) {
@@ -534,10 +589,11 @@
                 item.setAttribute('data-index', index);
                 item.innerHTML = `
                     <input type="text" id="flaw-${index}" placeholder="FLAW" onchange="saveCharacter()">
-                    <button class="remove-button" onclick="removeFlaw(${index})">-</button>
+                    <button class="remove-button" id="remove-flaw-${index}">-</button>
                 `;
                 container.insertBefore(item, addButton);
                 updateRemoveButtons('flaw');
+                addEvent(document.getElementById(`remove-flaw-${index}`), () => removeFlaw(index), `remove-flaw-${index}`);
                 saveCharacter();
                 console.log(`Added flaw-${index}`);
             } catch (err) {
@@ -575,10 +631,11 @@
                 item.setAttribute('data-index', index);
                 item.innerHTML = `
                     <input type="text" id="aspiration-${index}" placeholder="ASPIRATION" onchange="saveCharacter()">
-                    <button class="remove-button" onclick="removeAspiration(${index})">-</button>
+                    <button class="remove-button" id="remove-aspiration-${index}">-</button>
                 `;
                 container.insertBefore(item, addButton);
                 updateRemoveButtons('aspiration');
+                addEvent(document.getElementById(`remove-aspiration-${index}`), () => removeAspiration(index), `remove-aspiration-${index}`);
                 saveCharacter();
                 console.log(`Added aspiration-${index}`);
             } catch (err) {
@@ -616,10 +673,11 @@
                 item.setAttribute('data-index', index);
                 item.innerHTML = `
                     <input type="text" id="gear-${index}" placeholder="WEAPON/TOOL/ITEM" onchange="saveCharacter()">
-                    <button class="remove-button" onclick="removeGear(${index})">-</button>
+                    <button class="remove-button" id="remove-gear-${index}">-</button>
                 `;
                 container.insertBefore(item, addButton);
                 updateRemoveButtons('gear');
+                addEvent(document.getElementById(`remove-gear-${index}`), () => removeGear(index), `remove-gear-${index}`);
                 saveCharacter();
                 console.log(`Added gear-${index}`);
             } catch (err) {
@@ -657,10 +715,11 @@
                 item.setAttribute('data-index', index);
                 item.innerHTML = `
                     <input type="text" id="ability-${index}" placeholder="SPELL/ABILITY/FEATURE/SKILL" onchange="saveCharacter()">
-                    <button class="remove-button" onclick="removeAbility(${index})">-</button>
+                    <button class="remove-button" id="remove-ability-${index}">-</button>
                 `;
                 container.insertBefore(item, addButton);
                 updateRemoveButtons('ability');
+                addEvent(document.getElementById(`remove-ability-${index}`), () => removeAbility(index), `remove-ability-${index}`);
                 saveCharacter();
                 console.log(`Added ability-${index}`);
             } catch (err) {
@@ -716,7 +775,6 @@
 
         function rollD20() {
             try {
-                console.log('rollD20 called');
                 const result = Math.floor(Math.random() * 20) + 1;
                 const resultButton = document.getElementById('d20-result');
                 const messageDisplay = document.getElementById('dice-message');
@@ -828,12 +886,14 @@
                             item.setAttribute('data-index', index);
                             item.innerHTML = `
                                 <input type="text" id="trait-${index}" placeholder="TRAIT" value="${trait}" onchange="saveCharacter()">
-                                <button class="remove-button" onclick="removeTrait(${index})" style="display: none;">-</button>
+                                <button class="remove-button" id="remove-trait-${index}">-</button>
                             `;
                             traitsContainer.appendChild(item);
+                            addEvent(document.getElementById(`remove-trait-${index}`), () => removeTrait(index), `remove-trait-${index}`);
                             traitCount = index + 1;
                         });
-                        traitsContainer.innerHTML += '<button class="add-button" onclick="addTrait()">+ ADD TRAIT</button>';
+                        traitsContainer.innerHTML += '<button class="add-button" id="add-trait">+ ADD TRAIT</button>';
+                        addEvent(document.getElementById('add-trait'), addTrait, 'add-trait');
                         updateRemoveButtons('trait');
 
                         // Clear and rebuild flaws
@@ -846,12 +906,14 @@
                             item.setAttribute('data-index', index);
                             item.innerHTML = `
                                 <input type="text" id="flaw-${index}" placeholder="FLAW" value="${flaw}" onchange="saveCharacter()">
-                                <button class="remove-button" onclick="removeFlaw(${index})" style="display: none;">-</button>
+                                <button class="remove-button" id="remove-flaw-${index}">-</button>
                             `;
                             flawsContainer.appendChild(item);
+                            addEvent(document.getElementById(`remove-flaw-${index}`), () => removeFlaw(index), `remove-flaw-${index}`);
                             flawCount = index + 1;
                         });
-                        flawsContainer.innerHTML += '<button class="add-button" onclick="addFlaw()">+ ADD FLAW</button>';
+                        flawsContainer.innerHTML += '<button class="add-button" id="add-flaw">+ ADD FLAW</button>';
+                        addEvent(document.getElementById('add-flaw'), addFlaw, 'add-flaw');
                         updateRemoveButtons('flaw');
 
                         // Clear and rebuild aspirations
@@ -864,12 +926,14 @@
                             item.setAttribute('data-index', index);
                             item.innerHTML = `
                                 <input type="text" id="aspiration-${index}" placeholder="ASPIRATION" value="${aspiration}" onchange="saveCharacter()">
-                                <button class="remove-button" onclick="removeAspiration(${index})" style="display: none;">-</button>
+                                <button class="remove-button" id="remove-aspiration-${index}">-</button>
                             `;
                             aspirationsContainer.appendChild(item);
+                            addEvent(document.getElementById(`remove-aspiration-${index}`), () => removeAspiration(index), `remove-aspiration-${index}`);
                             aspirationCount = index + 1;
                         });
-                        aspirationsContainer.innerHTML += '<button class="add-button" onclick="addAspiration()">+ ADD ASPIRATION</button>';
+                        aspirationsContainer.innerHTML += '<button class="add-button" id="add-aspiration">+ ADD ASPIRATION</button>';
+                        addEvent(document.getElementById('add-aspiration'), addAspiration, 'add-aspiration');
                         updateRemoveButtons('aspiration');
 
                         // Clear and rebuild gear
@@ -882,12 +946,14 @@
                             item.setAttribute('data-index', index);
                             item.innerHTML = `
                                 <input type="text" id="gear-${index}" placeholder="WEAPON/TOOL/ITEM" value="${gear}" onchange="saveCharacter()">
-                                <button class="remove-button" onclick="removeGear(${index})" style="display: none;">-</button>
+                                <button class="remove-button" id="remove-gear-${index}">-</button>
                             `;
                             gearContainer.appendChild(item);
+                            addEvent(document.getElementById(`remove-gear-${index}`), () => removeGear(index), `remove-gear-${index}`);
                             gearCount = index + 1;
                         });
-                        gearContainer.innerHTML += '<button class="add-button" onclick="addGear()">+ ADD GEAR</button>';
+                        gearContainer.innerHTML += '<button class="add-button" id="add-gear">+ ADD GEAR</button>';
+                        addEvent(document.getElementById('add-gear'), addGear, 'add-gear');
                         updateRemoveButtons('gear');
 
                         // Clear and rebuild abilities
@@ -900,12 +966,14 @@
                             item.setAttribute('data-index', index);
                             item.innerHTML = `
                                 <input type="text" id="ability-${index}" placeholder="SPELL/ABILITY/FEATURE/SKILL" value="${ability}" onchange="saveCharacter()">
-                                <button class="remove-button" onclick="removeAbility(${index})" style="display: none;">-</button>
+                                <button class="remove-button" id="remove-ability-${index}">-</button>
                             `;
                             abilitiesContainer.appendChild(item);
+                            addEvent(document.getElementById(`remove-ability-${index}`), () => removeAbility(index), `remove-ability-${index}`);
                             abilityCount = index + 1;
                         });
-                        abilitiesContainer.innerHTML += '<button class="add-button" onclick="addAbility()">+ ADD ABILITY</button>';
+                        abilitiesContainer.innerHTML += '<button class="add-button" id="add-ability">+ ADD ABILITY</button>';
+                        addEvent(document.getElementById('add-ability'), addAbility, 'add-ability');
                         updateRemoveButtons('ability');
 
                         localStorage.setItem('character', JSON.stringify(character));
@@ -917,14 +985,41 @@
                     }
                 };
                 reader.readAsText(file);
+                console.log('Import character initiated');
             } catch (err) {
                 console.error('Error in importCharacter:', err);
             }
         }
 
-        // Load saved character on page load
-        window.onload = function() {
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', () => {
             try {
+                // Add event listeners for static buttons
+                addEvent(document.getElementById('add-trait'), addTrait, 'add-trait');
+                addEvent(document.getElementById('remove-trait-0'), () => removeTrait(0), 'remove-trait-0');
+                addEvent(document.getElementById('add-flaw'), addFlaw, 'add-flaw');
+                addEvent(document.getElementById('remove-flaw-0'), () => removeFlaw(0), 'remove-flaw-0');
+                addEvent(document.getElementById('add-aspiration'), addAspiration, 'add-aspiration');
+                addEvent(document.getElementById('remove-aspiration-0'), () => removeAspiration(0), 'remove-aspiration-0');
+                addEvent(document.getElementById('add-gear'), addGear, 'add-gear');
+                addEvent(document.getElementById('remove-gear-0'), () => removeGear(0), 'remove-gear-0');
+                addEvent(document.getElementById('add-ability'), addAbility, 'add-ability');
+                addEvent(document.getElementById('remove-ability-0'), () => removeAbility(0), 'remove-ability-0');
+                addEvent(document.getElementById('hp-minus'), () => changeHP(-1), 'hp-minus');
+                addEvent(document.getElementById('hp-plus'), () => changeHP(1), 'hp-plus');
+                addEvent(document.getElementById('d20-result'), rollD20, 'd20-result');
+                addEvent(document.getElementById('save-notes'), saveCharacter, 'save-notes');
+                addEvent(document.getElementById('export-character'), exportCharacter, 'export-character');
+                addEvent(document.getElementById('import-character'), () => document.getElementById('import-file').click(), 'import-character');
+                addEvent(document.getElementById('info-character-info'), () => toggleInfo('character-info'), 'info-character-info');
+                addEvent(document.getElementById('info-identity'), () => toggleInfo('identity'), 'info-identity');
+                addEvent(document.getElementById('info-hp'), () => toggleInfo('hp'), 'info-hp');
+                addEvent(document.getElementById('info-gear'), () => toggleInfo('gear'), 'info-gear');
+                addEvent(document.getElementById('info-abilities'), () => toggleInfo('abilities'), 'info-abilities');
+                addEvent(document.getElementById('info-dice-roller'), () => toggleInfo('dice-roller'), 'info-dice-roller');
+                addEvent(document.getElementById('info-notes'), () => toggleInfo('notes'), 'info-notes');
+
+                // Load saved character
                 const savedCharacter = localStorage.getItem('character');
                 if (savedCharacter) {
                     const character = JSON.parse(savedCharacter);
@@ -947,12 +1042,14 @@
                         item.setAttribute('data-index', index);
                         item.innerHTML = `
                             <input type="text" id="trait-${index}" placeholder="TRAIT" value="${trait}" onchange="saveCharacter()">
-                            <button class="remove-button" onclick="removeTrait(${index})" style="display: none;">-</button>
+                            <button class="remove-button" id="remove-trait-${index}">-</button>
                         `;
                         traitsContainer.appendChild(item);
+                        addEvent(document.getElementById(`remove-trait-${index}`), () => removeTrait(index), `remove-trait-${index}`);
                         traitCount = index + 1;
                     });
-                    traitsContainer.innerHTML += '<button class="add-button" onclick="addTrait()">+ ADD TRAIT</button>';
+                    traitsContainer.innerHTML += '<button class="add-button" id="add-trait">+ ADD TRAIT</button>';
+                    addEvent(document.getElementById('add-trait'), addTrait, 'add-trait');
                     updateRemoveButtons('trait');
 
                     // Load flaws
@@ -965,12 +1062,14 @@
                         item.setAttribute('data-index', index);
                         item.innerHTML = `
                             <input type="text" id="flaw-${index}" placeholder="FLAW" value="${flaw}" onchange="saveCharacter()">
-                            <button class="remove-button" onclick="removeFlaw(${index})" style="display: none;">-</button>
+                            <button class="remove-button" id="remove-flaw-${index}">-</button>
                         `;
                         flawsContainer.appendChild(item);
+                        addEvent(document.getElementById(`remove-flaw-${index}`), () => removeFlaw(index), `remove-flaw-${index}`);
                         flawCount = index + 1;
                     });
-                    flawsContainer.innerHTML += '<button class="add-button" onclick="addFlaw()">+ ADD FLAW</button>';
+                    flawsContainer.innerHTML += '<button class="add-button" id="add-flaw">+ ADD FLAW</button>';
+                    addEvent(document.getElementById('add-flaw'), addFlaw, 'add-flaw');
                     updateRemoveButtons('flaw');
 
                     // Load aspirations
@@ -983,12 +1082,14 @@
                         item.setAttribute('data-index', index);
                         item.innerHTML = `
                             <input type="text" id="aspiration-${index}" placeholder="ASPIRATION" value="${aspiration}" onchange="saveCharacter()">
-                            <button class="remove-button" onclick="removeAspiration(${index})" style="display: none;">-</button>
+                            <button class="remove-button" id="remove-aspiration-${index}">-</button>
                         `;
                         aspirationsContainer.appendChild(item);
+                        addEvent(document.getElementById(`remove-aspiration-${index}`), () => removeAspiration(index), `remove-aspiration-${index}`);
                         aspirationCount = index + 1;
                     });
-                    aspirationsContainer.innerHTML += '<button class="add-button" onclick="addAspiration()">+ ADD ASPIRATION</button>';
+                    aspirationsContainer.innerHTML += '<button class="add-button" id="add-aspiration">+ ADD ASPIRATION</button>';
+                    addEvent(document.getElementById('add-aspiration'), addAspiration, 'add-aspiration');
                     updateRemoveButtons('aspiration');
 
                     // Load gear
@@ -1001,12 +1102,14 @@
                         item.setAttribute('data-index', index);
                         item.innerHTML = `
                             <input type="text" id="gear-${index}" placeholder="WEAPON/TOOL/ITEM" value="${gear}" onchange="saveCharacter()">
-                            <button class="remove-button" onclick="removeGear(${index})" style="display: none;">-</button>
+                            <button class="remove-button" id="remove-gear-${index}">-</button>
                         `;
                         gearContainer.appendChild(item);
+                        addEvent(document.getElementById(`remove-gear-${index}`), () => removeGear(index), `remove-gear-${index}`);
                         gearCount = index + 1;
                     });
-                    gearContainer.innerHTML += '<button class="add-button" onclick="addGear()">+ ADD GEAR</button>';
+                    gearContainer.innerHTML += '<button class="add-button" id="add-gear">+ ADD GEAR</button>';
+                    addEvent(document.getElementById('add-gear'), addGear, 'add-gear');
                     updateRemoveButtons('gear');
 
                     // Load abilities
@@ -1019,19 +1122,22 @@
                         item.setAttribute('data-index', index);
                         item.innerHTML = `
                             <input type="text" id="ability-${index}" placeholder="SPELL/ABILITY/FEATURE/SKILL" value="${ability}" onchange="saveCharacter()">
-                            <button class="remove-button" onclick="removeAbility(${index})" style="display: none;">-</button>
+                            <button class="remove-button" id="remove-ability-${index}">-</button>
                         `;
                         abilitiesContainer.appendChild(item);
+                        addEvent(document.getElementById(`remove-ability-${index}`), () => removeAbility(index), `remove-ability-${index}`);
                         abilityCount = index + 1;
                     });
-                    abilitiesContainer.innerHTML += '<button class="add-button" onclick="addAbility()">+ ADD ABILITY</button>';
+                    abilitiesContainer.innerHTML += '<button class="add-button" id="add-ability">+ ADD ABILITY</button>';
+                    addEvent(document.getElementById('add-ability'), addAbility, 'add-ability');
                     updateRemoveButtons('ability');
                     console.log('Character loaded from localStorage');
                 }
+                console.log('DOM loaded, event listeners initialized');
             } catch (err) {
-                console.error('Error in window.onload:', err);
+                console.error('Error in DOMContentLoaded:', err);
             }
-        };
+        });
     </script>
 </body>
 </html>
