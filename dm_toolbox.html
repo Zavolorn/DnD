@@ -3,722 +3,579 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D&D DM TOOLBOX</title>
+    <title>D&D DM Toolbox</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
         body {
             font-family: Arial, sans-serif;
-            max-width: 100%;
-            margin: 10px auto;
-            padding: 10px;
-            background-color: #2F004F; /* Very dark purple, almost black */
+            background-color: #e6e6fa;
             color: #333;
-            text-transform: uppercase !important;
-        }
-        .section {
             margin: 10px;
-            background-color: #E6E6FA; /* Light purple background */
+            overflow-x: hidden;
+        }
+        h1, h2 {
+            color: #4b0082;
+        }
+        .combat-tracker, .time-tracker, .combat-controls {
+            background-color: #f0f0ff;
+            border: 1px solid #9370db;
             padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #4B0082; /* Deep purple border */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+            border-radius: 8px;
+            max-width: 100%;
+            box-sizing: border-box;
         }
-        .section h1 {
-            font-family: 'Georgia', serif;
-            color: #FFFFFF; /* White title text */
-            margin-top: 0;
-        }
-        .section h2 {
-            font-family: 'Georgia', serif;
-            color: #4B0082; /* Deep purple text */
-            margin-top: 0;
-        }
-        .section-header {
-            display: flex;
-            justify-content: space-between;
+        .participant-row {
+            display: grid;
+            grid-template-columns: 60px 70vw min-content;
             align-items: center;
-            margin-bottom: 10px;
-        }
-        .d20-roll {
-            background-color: #4B0082; /* Deep purple */
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-            text-transform: uppercase;
-            min-width: 60px;
-            height: 30px;
-            line-height: 30px;
-            text-align: center;
-            padding: 0;
-            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
-        }
-        .d20-roll:hover {
-            background-color: #6A5ACD; /* Lighter purple for hover */
-        }
-        .table-container {
-            overflow-x: auto;
+            padding: 5px;
+            border-bottom: 1px solid #d8bfd8;
             max-width: 100%;
+            box-sizing: border-box;
         }
-        table {
-            width: 100%;
-            max-width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
+        .participant-row > div, .participant-row > select {
+            border-right: 1px solid #d8bfd8;
+            padding-right: 3px;
         }
-        th, td {
-            border: 1px solid #4B0082; /* Deep purple border */
-            padding: 6px;
-            text-align: left;
-        }
-        th {
-            background-color: #4B0082; /* Deep purple */
-            color: white;
-            resize: horizontal;
-            overflow: auto;
-        }
-        th.type { min-width: 50px; }
-        th.name { min-width: 250px; }
-        th.initiative { min-width: 40px; }
-        th.remove { width: 50px; }
-        input[type="text"] {
-            width: 100%;
-            min-width: 100%;
-            padding: 4px;
-            border: 1px solid #4B0082;
-            border-radius: 3px;
-            white-space: nowrap;
-            overflow: auto;
-            text-transform: uppercase;
-        }
-        input[type="number"] {
-            width: 100%;
-            padding: 4px;
-            border: 1px solid #4B0082;
-            border-radius: 3px;
-            text-transform: uppercase;
-        }
-        .participant-details input[type="number"] {
-            width: 40px;
-            display: inline-block;
-        }
-        input[type="radio"] {
-            margin: 0 3px;
-        }
-        input::placeholder {
-            text-transform: uppercase;
-        }
-        .participant-details {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 5px;
-            justify-content: space-between;
-        }
-        .hp-container {
+        .participant-row > div:last-child {
+            border-right: none;
+            padding-right: 0;
             display: flex;
             flex-direction: column;
-            gap: 5px;
-        }
-        .hp-inputs {
-            display: flex;
-            gap: 3px;
             align-items: center;
+            gap: 2px;
+            max-width: 45px;
+            min-width: 0;
         }
-        .buttons {
-            display: flex;
-            gap: 3px;
-            justify-content: flex-start;
+        .participant-header {
+            display: grid;
+            grid-template-columns: 60px 70vw min-content;
+            font-weight: bold;
+            padding: 5px;
+            background-color: #d8bfd8;
+            max-width: 100%;
+            box-sizing: border-box;
         }
-        .ac-container {
+        .participant-header > div {
+            border-right: 1px solid #9370db;
+            padding-right: 3px;
+        }
+        .participant-header > div:last-child {
+            border-right: none;
+            padding-right: 0;
             display: flex;
             align-items: center;
-            gap: 3px;
-            border-left: 1px solid #4B0082; /* Vertical separator */
-            padding-left: 10px;
+            justify-content: flex-end;
+            max-width: 45px;
+            min-width: 0;
         }
-        button {
-            background-color: #4B0082; /* Deep purple */
+        .sort-button {
+            background-color: #6a5acd;
             color: white;
             border: none;
-            border-radius: 3px;
-            padding: 4px 8px;
+            padding: 3px 8px;
             cursor: pointer;
-            font-size: 12px;
-            text-transform: uppercase;
+            border-radius: 4px;
         }
-        button:hover {
-            background-color: #6A5ACD; /* Lighter purple for hover */
+        .sort-button:hover {
+            background-color: #483d8b;
         }
-        .remove-participant {
-            background-color: #d32f2f;
-        }
-        .remove-participant:hover {
-            background-color: #b71c1c;
-        }
-        .sort-initiative {
-            margin-left: 5px;
-            padding: 2px 6px;
-            font-size: 10px;
-        }
-        .table-footer-left {
-            float: left;
-            margin: 5px 0;
-        }
-        .table-footer-right {
-            float: right;
+        .type-section {
             display: flex;
-            gap: 5px;
-            margin: 5px 0;
+            flex-direction: column;
+            gap: 3px;
+            align-items: center;
         }
-        .clear {
-            clear: both;
+        .dr-dead-section {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 3px;
+            width: 100%;
+            justify-content: center;
+            max-width: 100%;
+            box-sizing: border-box;
         }
-        .npc-row {
-            background-color: #FFE6E6; /* Light red tint for NPC */
+        .name-conditions {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
         }
-        .current-turn {
-            border: 3px solid #FFFF00; /* Yellow border for current turn */
+        .name-section {
+            display: block;
+            max-width: 100%;
+            box-sizing: border-box;
         }
-        .time-controls {
+        .name-section input {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            flex-shrink: 1;
+            box-sizing: border-box;
+        }
+        .conditions-section {
             display: flex;
             gap: 10px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+        .conditions-section input {
+            flex: 1;
+            flex-shrink: 1;
+            margin: 2px 0;
+            height: 18px;
+            min-width: 0;
+            max-width: calc((100% - 40px) / 4);
+            box-sizing: border-box;
+        }
+        .initiative-section {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            margin-top: 5px;
+            gap: 2px;
+            flex-shrink: 0;
+            min-width: 0;
         }
-        .stopwatch, .countdown, .initiative-tracker {
-            margin-bottom: 15px;
+        select, input[type="text"], input[type="number"], input[type="checkbox"] {
+            background-color: #ffffff;
+            color: #000000;
+            border: 1px solid #483d8b;
+            padding: 3px;
+            border-radius: 4px;
+            box-sizing: border-box;
+            max-width: 100%;
         }
-        .stopwatch span, .countdown span, .initiative-tracker span {
-            font-size: 14px;
-            color: #4B0082;
-            margin-right: 10px;
+        input[type="number"] {
+            width: 30px;
         }
-        .countdown input[type="number"] {
-            width: 60px;
-            padding: 4px;
-            border: 1px solid #4B0082;
-            border-radius: 3px;
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
         }
-        @media screen and (max-width: 600px) {
-            body {
-                padding: 5px;
+        button {
+            background-color: #6a5acd;
+            color: white;
+            border: none;
+            padding: 3px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .remove-button {
+            padding: 2px 6px;
+            font-size: 12px;
+            width: 20px;
+        }
+        button:hover, select:hover, input:hover {
+            background-color: #483d8b;
+        }
+        .add-participant, .combat-control-btn, .time-control-btn {
+            background-color: #6a5acd;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            margin: 3px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .add-participant:hover, .combat-control-btn:hover, .time-control-btn:hover {
+            background-color: #483d8b;
+        }
+        .time-display {
+            font-size: 1.2em;
+            color: #4b0082;
+            margin: 5px 0;
+        }
+        .npc-trivial {
+            background-color: #b3e5fc;
+        }
+        .npc-standard {
+            background-color: #ffe6e6;
+        }
+        .npc-elite {
+            background-color: #ffcc99;
+        }
+        .npc-boss {
+            background-color: #ff9999;
+        }
+        .npc-nemesis {
+            background-color: #cc66cc;
+        }
+        .dead-row {
+            background-color: #d3d3d3;
+        }
+        .active-turn {
+            border: 3px solid #ffff00;
+        }
+        @media (max-width: 600px) {
+            .participant-row, .participant-header {
+                grid-template-columns: 50px 1fr min-content;
+                max-width: calc(100vw - 20px);
+                overflow-x: hidden;
             }
-            .section {
-                padding: 8px;
-                margin: 5px;
+            .participant-row > div:last-child, .participant-header > div:last-child {
+                max-width: 50px;
             }
-            th, td {
-                padding: 4px;
+            .name-conditions {
+                max-width: calc(100vw - 70px);
+                box-sizing: border-box;
+                overflow: hidden;
             }
-            input[type="text"], input[type="number"] {
-                padding: 3px;
-                font-size: 12px;
+            .name-section input {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
             }
-            .participant-details input[type="number"] {
-                width: 30px;
-            }
-            .countdown input[type="number"] {
-                width: 40px;
-                font-size: 10px;
-            }
-            button {
-                padding: 3px 6px;
-                font-size: 10px;
-            }
-            .sort-initiative {
-                padding: 2px 4px;
-                font-size: 9px;
-            }
-            .d20-roll {
-                padding: 0;
-                font-size: 8px;
-                min-width: 50px;
-                height: 24px;
-                line-height: 24px;
-            }
-            .stopwatch span, .countdown span, .initiative-tracker span {
-                font-size: 12px;
-            }
-            .time-controls {
+            .conditions-section {
+                flex-wrap: nowrap;
                 gap: 5px;
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+            .conditions-section input {
+                max-width: calc((100% - 20px) / 4);
+                min-width: 0;
+                font-size: 0.7em;
+                box-sizing: border-box;
+            }
+            input[type="number"] {
+                width: 25px;
+            }
+            input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+            }
+            .sort-button, .remove-button {
+                padding: 2px 5px;
+                font-size: 0.75em;
             }
         }
     </style>
 </head>
 <body>
-    <div class="title">
-        <h1>D&D DM TOOLBOX</h1>
+    <h1>D&D DM TOOLBOX</h1>
+
+    <div class="combat-tracker">
+        <h2>COMBAT TRACKER</h2>
+        <div class="participant-header">
+            <div>Type</div>
+            <div>Name</div>
+            <div><button class="sort-button" onclick="sortParticipants()">Sort</button></div>
+        </div>
+        <div id="participant-list">
+            <div class="participant-row">
+                <div class="type-section">
+                    <select onchange="updateRowStyle(this)">
+                        <option value="PC">PC</option>
+                        <option value="NPC-Trivial">NPC-Trivial</option>
+                        <option value="NPC-Standard">NPC-Standard</option>
+                        <option value="NPC-Elite">NPC-Elite</option>
+                        <option value="NPC-Boss">NPC-Boss</option>
+                        <option value="NPC-Nemesis">NPC-Nemesis</option>
+                    </select>
+                    <div class="dr-dead-section">
+                        <input type="number" placeholder="DR" value="15">
+                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)" value="💀">
+                    </div>
+                </div>
+                <div>
+                    <div class="name-conditions">
+                        <div class="name-section">
+                            <input type="text" placeholder="Name" class="name-input">
+                        </div>
+                        <div class="conditions-section">
+                            <input type="text" placeholder="Condition 1">
+                            <input type="text" placeholder="Condition 2">
+                            <input type="text" placeholder="Condition 3">
+                        </div>
+                    </div>
+                </div>
+                <div class="initiative-section">
+                    <input type="number" placeholder="Init">
+                    <button class="remove-button" onclick="removeParticipant(this)">-</button>
+                </div>
+            </div>
+        </div>
+        <button class="add-participant" onclick="addParticipant()">+ ADD PARTICIPANT</button>
     </div>
 
-    <div class="section combat-tracker">
-        <div class="section-header">
-            <h2>COMBAT TRACKER</h2>
-            <button class="d20-roll" onclick="rollD20()">ROLL D20</button>
-        </div>
-        <div class="table-container">
-            <table id="combat-table">
-                <thead>
-                    <tr>
-                        <th class="type resizable">TYPE</th>
-                        <th class="name resizable">NAME</th>
-                        <th class="initiative resizable">INIT <button class="sort-initiative" onclick="sortByInitiative()">SORT</button></th>
-                        <th class="remove"></th>
-                    </tr>
-                </thead>
-                <tbody id="combat-table-body">
-                    <tr class="participant" data-index="0">
-                        <td>
-                            <label><input type="radio" name="type-0" value="PC" checked onchange="updateParticipant(0)"> PC</label>
-                            <label><input type="radio" name="type-0" value="NPC" onchange="updateParticipant(0)"> NPC</label>
-                        </td>
-                        <td>
-                            <input type="text" id="name-0" placeholder="NAME" onchange="saveParticipants()">
-                            <div class="participant-details">
-                                <div class="hp-container">
-                                    <div class="hp-inputs">
-                                        <input type="number" id="current-hp-0" min="0" value="10" onchange="saveParticipants()">
-                                        <span>/</span>
-                                        <input type="number" id="total-hp-0" min="1" value="10" onchange="saveParticipants()">
-                                    </div>
-                                    <div class="buttons">
-                                        <button onclick="changeHP(0, -1)">-1</button>
-                                        <button onclick="changeHP(0, 1)">+1</button>
-                                    </div>
-                                </div>
-                                <div class="ac-container">
-                                    <span>AC:</span>
-                                    <input type="number" id="ac-0" min="0" value="10" style="display: none;" placeholder="AC" onchange="saveParticipants()">
-                                </div>
-                            </div>
-                        </td>
-                        <td><input type="number" id="initiative-0" value="0" onchange="saveParticipants()"></td>
-                        <td><button class="remove-participant" onclick="removeParticipant(0)" style="display: none;">-</button></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="table-footer-left">
-            <button class="add-participant" onclick="addParticipant()">+ ADD PARTICIPANT</button>
-        </div>
-        <div class="table-footer-right">
-            <button onclick="exportData()">EXPORT TRACKER</button>
-            <label for="import-file" style="display: inline-block;">
-                <button onclick="document.getElementById('import-file').click()">IMPORT TRACKER</button>
-            </label>
-            <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
-        </div>
-        <div class="clear"></div>
+    <div class="combat-controls">
+        <h2 id="active-turn">NO ACTIVE TURN</h2>
+        <button class="combat-control-btn" onclick="startCombat()">START COMBAT</button>
+        <button class="combat-control-btn" onclick="previousTurn()">PREVIOUS</button>
+        <button class="combat-control-btn" onclick="nextTurn()">NEXT</button>
+        <button class="combat-control-btn" onclick="endCombat()">END COMBAT</button>
     </div>
 
-    <div class="section time-initiative-tracker">
+    <div class="time-tracker">
         <h2>TIME & INITIATIVE TRACKER</h2>
-        <div class="stopwatch">
-            <span id="stopwatch-display">00:00.0</span>
-            <div class="time-controls">
-                <button onclick="pauseResumeStopwatch()">PAUSE/RESUME</button>
-                <button onclick="resetStopwatch()">RESET</button>
-            </div>
-        </div>
-        <div class="countdown">
-            <span id="countdown-display">05:00</span>
-            <input type="number" id="countdown-minutes" min="0" max="60" value="5" onchange="resetCountdown()">
-            <span>MINUTES</span>
-            <div class="time-controls">
-                <button onclick="pauseResumeCountdown()">START/PAUSE</button>
-                <button onclick="resetCountdown()">RESET</button>
-            </div>
-        </div>
-        <div class="initiative-tracker">
-            <span id="current-turn">NO ACTIVE TURN</span>
-            <div class="time-controls">
-                <button onclick="startCombat()">START COMBAT</button>
-                <button onclick="previousTurn()">PREVIOUS</button>
-                <button onclick="nextTurn()">NEXT</button>
-                <button onclick="endCombat()">END COMBAT</button>
-            </div>
-        </div>
+        <div class="time-display" id="initiative-timer">00:00.0</div>
+        <button class="time-control-btn" onclick="toggleInitiativeTimer()">PAUSE/RESUME</button>
+        <button class="time-control-btn" onclick="resetInitiativeTimer()">RESET</button>
+    </div>
+
+    <div class="time-tracker">
+        <div class="time-display" id="combat-timer">05:00</div>
+        <button class="time-control-btn" onclick="toggleCombatTimer()">START/PAUSE</button>
+        <button class="time-control-btn" onclick="resetCombatTimer()">RESET</button>
     </div>
 
     <script>
-        let participantCount = 1;
-        let initiativeOrder = [0]; // Initialize with first participant
+        let initiativeTime = 0;
+        let combatTime = 5 * 60 * 1000;
+        let initiativeTimerRunning = false;
+        let combatTimerRunning = false;
+        let initiativeInterval, combatInterval;
         let currentTurnIndex = -1;
-        let stopwatchInterval = null;
-        let stopwatchTime = 0;
-        let stopwatchRunning = false;
-        let countdownInterval = null;
-        let countdownTime = 5 * 60; // Default 5 minutes in seconds
-        let countdownRunning = false;
+        let participants = [];
 
-        function rollD20() {
-            const result = Math.floor(Math.random() * 20) + 1;
-            const button = document.querySelector('.d20-roll');
-            button.textContent = result;
-        }
-
-        function formatTime(seconds, tenths = false) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            const tenthsStr = tenths ? `.${Math.floor((seconds % 1) * 10)}` : '';
-            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}${tenthsStr}`;
-        }
-
-        function startStopwatch() {
-            if (!stopwatchRunning) {
-                stopwatchRunning = true;
-                stopwatchInterval = setInterval(() => {
-                    stopwatchTime += 0.1;
-                    document.getElementById('stopwatch-display').textContent = formatTime(stopwatchTime, true);
-                }, 100);
+        function updateConditions(select) {
+            const row = select.closest('.participant-row');
+            const conditionsSection = row.querySelector('.conditions-section');
+            const type = select.value;
+            let numConditions = 0;
+            switch (type) {
+                case 'PC': numConditions = 3; break;
+                case 'NPC-Trivial': numConditions = 0; break;
+                case 'NPC-Standard': numConditions = 1; break;
+                case 'NPC-Elite': numConditions = 2; break;
+                case 'NPC-Boss': numConditions = 3; break;
+                case 'NPC-Nemesis': numConditions = 4; break;
+            }
+            conditionsSection.innerHTML = '';
+            const isMobile = window.innerWidth <= 600;
+            const gap = isMobile ? 5 : 10;
+            for (let i = 1; i <= numConditions; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = `Condition ${i}`;
+                input.style.maxWidth = `calc((100% - ${(numConditions - 1) * gap}px) / ${numConditions})`;
+                input.style.minWidth = '0';
+                conditionsSection.appendChild(input);
             }
         }
 
-        function pauseResumeStopwatch() {
-            if (stopwatchRunning) {
-                clearInterval(stopwatchInterval);
-                stopwatchRunning = false;
-            } else {
-                startStopwatch();
+        function updateRowStyle(select) {
+            const row = select.closest('.participant-row');
+            row.classList.remove('npc-trivial', 'npc-standard', 'npc-elite', 'npc-boss', 'npc-nemesis', 'dead-row');
+            switch (select.value) {
+                case 'NPC-Trivial': row.classList.add('npc-trivial'); break;
+                case 'NPC-Standard': row.classList.add('npc-standard'); break;
+                case 'NPC-Elite': row.classList.add('npc-elite'); break;
+                case 'NPC-Boss': row.classList.add('npc-boss'); break;
+                case 'NPC-Nemesis': row.classList.add('npc-nemesis'); break;
+                case 'PC': break;
             }
+            updateConditions(select);
+            checkRowStatus(select);
         }
 
-        function resetStopwatch() {
-            clearInterval(stopwatchInterval);
-            stopwatchRunning = false;
-            stopwatchTime = 0;
-            document.getElementById('stopwatch-display').textContent = '00:00.0';
-        }
-
-        function startCountdown() {
-            if (!countdownRunning) {
-                countdownRunning = true;
-                countdownInterval = setInterval(() => {
-                    if (countdownTime <= 0) {
-                        clearInterval(countdownInterval);
-                        countdownRunning = false;
-                        document.getElementById('countdown-display').textContent = '00:00';
-                        alert('COUNTDOWN FINISHED!');
-                        return;
-                    }
-                    countdownTime--;
-                    document.getElementById('countdown-display').textContent = formatTime(countdownTime);
-                }, 1000);
+        function checkRowStatus(element) {
+            const row = element.closest('.participant-row');
+            const deadCheckbox = row.querySelector('.type-section input[type="checkbox"]');
+            row.classList.remove('dead-row');
+            if (deadCheckbox && deadCheckbox.checked) {
+                row.classList.add('dead-row');
             }
-        }
-
-        function pauseResumeCountdown() {
-            if (countdownRunning) {
-                clearInterval(countdownInterval);
-                countdownRunning = false;
-            } else {
-                startCountdown();
-            }
-        }
-
-        function resetCountdown() {
-            clearInterval(countdownInterval);
-            countdownRunning = false;
-            const input = document.getElementById('countdown-minutes');
-            countdownTime = Math.max(0, Math.min(60, parseInt(input.value) || 5)) * 60;
-            document.getElementById('countdown-display').textContent = formatTime(countdownTime);
-        }
-
-        function updateParticipant(index) {
-            const type = document.querySelector(`input[name="type-${index}"]:checked`).value;
-            const acInput = document.getElementById(`ac-${index}`);
-            const row = document.querySelector(`.participant[data-index="${index}"]`);
-            acInput.style.display = type === 'NPC' ? 'block' : 'none';
-            row.classList.remove('npc-row');
-            if (type === 'NPC') {
-                row.classList.add('npc-row');
-            }
-            saveParticipants();
-            updateInitiativeTracker();
-        }
-
-        function changeHP(index, amount) {
-            const currentHPInput = document.getElementById(`current-hp-${index}`);
-            const totalHPInput = document.getElementById(`total-hp-${index}`);
-            let currentHP = parseInt(currentHPInput.value) || 0;
-            const totalHP = parseInt(totalHPInput.value) || 1;
-            currentHP = Math.max(0, Math.min(totalHP, currentHP + amount));
-            currentHPInput.value = currentHP;
-            saveParticipants();
         }
 
         function addParticipant() {
-            const tableBody = document.getElementById('combat-table-body');
-            const index = participantCount++;
-            const row = document.createElement('tr');
-            row.className = 'participant';
-            row.setAttribute('data-index', index);
-            row.innerHTML = `
-                <td>
-                    <label><input type="radio" name="type-${index}" value="PC" checked onchange="updateParticipant(${index})"> PC</label>
-                    <label><input type="radio" name="type-${index}" value="NPC" onchange="updateParticipant(${index})"> NPC</label>
-                </td>
-                <td>
-                    <input type="text" id="name-${index}" placeholder="NAME" onchange="saveParticipants()">
-                    <div class="participant-details">
-                        <div class="hp-container">
-                            <div class="hp-inputs">
-                                <input type="number" id="current-hp-${index}" min="0" value="10" onchange="saveParticipants()">
-                                <span>/</span>
-                                <input type="number" id="total-hp-${index}" min="1" value="10" onchange="saveParticipants()">
-                            </div>
-                            <div class="buttons">
-                                <button onclick="changeHP(${index}, -1)">-1</button>
-                                <button onclick="changeHP(${index}, 1)">+1</button>
-                            </div>
+            const participantList = document.getElementById('participant-list');
+            const newParticipant = document.createElement('div');
+            newParticipant.className = 'participant-row';
+            newParticipant.innerHTML = `
+                <div class="type-section">
+                    <select onchange="updateRowStyle(this)">
+                        <option value="PC">PC</option>
+                        <option value="NPC-Trivial">NPC-Trivial</option>
+                        <option value="NPC-Standard">NPC-Standard</option>
+                        <option value="NPC-Elite">NPC-Elite</option>
+                        <option value="NPC-Boss">NPC-Boss</option>
+                        <option value="NPC-Nemesis">NPC-Nemesis</option>
+                    </select>
+                    <div class="dr-dead-section">
+                        <input type="number" placeholder="DR" value="15">
+                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)" value="💀">
+                    </div>
+                </div>
+                <div>
+                    <div class="name-conditions">
+                        <div class="name-section">
+                            <input type="text" placeholder="Name" class="name-input">
                         </div>
-                        <div class="ac-container">
-                            <span>AC:</span>
-                            <input type="number" id="ac-${index}" min="0" value="10" style="display: none;" placeholder="AC" onchange="saveParticipants()">
+                        <div class="conditions-section">
+                            <input type="text" placeholder="Condition 1">
+                            <input type="text" placeholder="Condition 2">
+                            <input type="text" placeholder="Condition 3">
                         </div>
                     </div>
-                </td>
-                <td><input type="number" id="initiative-${index}" value="0" onchange="saveParticipants()"></td>
-                <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
+                </div>
+                <div class="initiative-section">
+                    <input type="number" placeholder="Init">
+                    <button class="remove-button" onclick="removeParticipant(this)">-</button>
+                </div>
             `;
-            tableBody.appendChild(row);
-            initiativeOrder.push(index); // Add new participant to initiative order
-            updateRemoveButtons();
-            saveParticipants();
-            updateInitiativeTracker();
+            participantList.appendChild(newParticipant);
+            updateRowStyle(newParticipant.querySelector('select'));
+            updateParticipants();
         }
 
-        function removeParticipant(index) {
-            if (participantCount <= 1) return; // Prevent removing the last participant
-            const row = document.querySelector(`.participant[data-index="${index}"]`);
-            if (row) {
-                row.remove();
-                participantCount--;
-                initiativeOrder = initiativeOrder.filter(i => i !== index); // Remove from initiative order
-                if (currentTurnIndex >= initiativeOrder.length) {
-                    currentTurnIndex = initiativeOrder.length - 1;
-                }
-                updateRemoveButtons();
-                saveParticipants();
-                updateInitiativeTracker();
+        function removeParticipant(button) {
+            const row = button.closest('.participant-row');
+            const wasActive = row.classList.contains('active-turn');
+            const index = Array.from(document.getElementsByClassName('participant-row')).indexOf(row);
+            row.remove();
+            updateParticipants();
+            if (wasActive && participants.length > 0) {
+                currentTurnIndex = Math.min(index, participants.length - 1);
+            } else if (participants.length === 0) {
+                currentTurnIndex = -1;
+            }
+            updateActiveTurn();
+        }
+
+        function sortParticipants() {
+            const participantList = document.getElementById('participant-list');
+            const rows = Array.from(participantList.getElementsByClassName('participant-row'));
+            const activeRow = rows.find(row => row.classList.contains('active-turn'));
+            const activeIndex = activeRow ? rows.indexOf(activeRow) : -1;
+
+            const sortedRows = rows.sort((a, b) => {
+                const initA = parseInt(a.querySelector('.initiative-section input[type="number"]').value) || 0;
+                const initB = parseInt(b.querySelector('.initiative-section input[type="number"]').value) || 0;
+                return initB - initA;
+            });
+
+            participantList.innerHTML = '';
+            sortedRows.forEach(row => participantList.appendChild(row));
+            updateParticipants();
+
+            if (activeIndex >= 0 && participants.length > 0) {
+                currentTurnIndex = Math.min(activeIndex, participants.length - 1);
+            } else if (participants.length === 0) {
+                currentTurnIndex = -1;
+            }
+            updateActiveTurn();
+        }
+
+        function updateParticipants() {
+            participants = Array.from(document.getElementsByClassName('participant-row')).map(row => ({
+                name: row.querySelector('.name-input').value || 'Unnamed',
+                initiative: parseInt(row.querySelector('.initiative-section input[type="number"]').value) || 0
+            }));
+        }
+
+        function updateActiveTurn() {
+            const rows = document.getElementsByClassName('participant-row');
+            Array.from(rows).forEach(row => row.classList.remove('active-turn'));
+            if (currentTurnIndex >= 0 && currentTurnIndex < rows.length) {
+                rows[currentTurnIndex].classList.add('active-turn');
+                document.getElementById('active-turn').textContent = `Active Turn: ${participants[currentTurnIndex].name}`;
+            } else {
+                document.getElementById('active-turn').textContent = 'NO ACTIVE TURN';
             }
         }
 
-        function updateRemoveButtons() {
-            const buttons = document.querySelectorAll('.remove-participant');
-            buttons.forEach(button => {
-                button.style.display = participantCount > 1 ? 'block' : 'none';
-            });
+        function formatTime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            const millis = Math.floor((ms % 1000) / 100);
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${millis}`;
         }
 
-        function saveParticipants() {
-            const participants = [];
-            const rows = document.querySelectorAll('.participant');
-            rows.forEach(row => {
-                const index = row.getAttribute('data-index');
-                const type = document.querySelector(`input[name="type-${index}"]:checked`).value;
-                participants.push({
-                    type: type,
-                    name: document.getElementById(`name-${index}`).value,
-                    currentHP: parseInt(document.getElementById(`current-hp-${index}`).value) || 0,
-                    totalHP: parseInt(document.getElementById(`total-hp-${index}`).value) || 1,
-                    ac: type === 'NPC' ? (parseInt(document.getElementById(`ac-${index}`).value) || 10) : null,
-                    initiative: parseInt(document.getElementById(`initiative-${index}`).value) || 0
-                });
-            });
-            localStorage.setItem('combat-participants', JSON.stringify(participants));
+        function formatCombatTime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
-        function sortByInitiative() {
-            const tableBody = document.getElementById('combat-table-body');
-            const rows = Array.from(document.querySelectorAll('.participant'));
-            const rowData = rows.map(row => ({
-                element: row,
-                index: parseInt(row.getAttribute('data-index')),
-                initiative: parseInt(document.getElementById(`initiative-${row.getAttribute('data-index')}`).value) || 0
-            }));
-            rowData.sort((a, b) => b.initiative - a.initiative); // Descending order
-            initiativeOrder = rowData.map(data => data.index);
-            tableBody.innerHTML = '';
-            rowData.forEach(data => tableBody.appendChild(data.element));
-            saveParticipants();
-            currentTurnIndex = -1;
-            updateInitiativeTracker();
+        function updateInitiativeTimer() {
+            if (initiativeTimerRunning) {
+                initiativeTime += 100;
+                document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
+            }
+        }
+
+        function updateCombatTimer() {
+            if (combatTimerRunning && combatTime > 0) {
+                combatTime -= 100;
+                document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
+            }
+        }
+
+        function toggleInitiativeTimer() {
+            initiativeTimerRunning = !initiativeTimerRunning;
+            if (initiativeTimerRunning && !initiativeInterval) {
+                initiativeInterval = setInterval(updateInitiativeTimer, 100);
+            } else if (!initiativeTimerRunning && initiativeInterval) {
+                clearInterval(initiativeInterval);
+                initiativeInterval = null;
+            }
+        }
+
+        function resetInitiativeTimer() {
+            initiativeTimerRunning = false;
+            clearInterval(initiativeInterval);
+            initiativeInterval = null;
+            initiativeTime = 0;
+            document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
+        }
+
+        function toggleCombatTimer() {
+            combatTimerRunning = !combatTimerRunning;
+            if (combatTimerRunning && !combatInterval) {
+                combatInterval = setInterval(updateCombatTimer, 100);
+            } else if (!combatTimerRunning && combatInterval) {
+                clearInterval(combatInterval);
+                combatInterval = null;
+            }
+        }
+
+        function resetCombatTimer() {
+            combatTimerRunning = false;
+            clearInterval(combatInterval);
+            combatInterval = null;
+            combatTime = 5 * 60 * 1000;
+            document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
         }
 
         function startCombat() {
-            sortByInitiative();
-            if (initiativeOrder.length > 0) {
+            updateParticipants();
+            if (participants.length > 0) {
                 currentTurnIndex = 0;
-                updateInitiativeTracker();
+                updateActiveTurn();
             }
         }
 
-        function endCombat() {
-            initiativeOrder = [];
-            currentTurnIndex = -1;
-            updateInitiativeTracker();
-            const rows = document.querySelectorAll('.participant');
-            rows.forEach(row => row.classList.remove('current-turn'));
-        }
-
-        function updateInitiativeTracker() {
-            const currentTurnDisplay = document.getElementById('current-turn');
-            const rows = document.querySelectorAll('.participant');
-            rows.forEach(row => row.classList.remove('current-turn'));
-            if (initiativeOrder.length === 0 || currentTurnIndex < 0 || currentTurnIndex >= initiativeOrder.length) {
-                currentTurnDisplay.textContent = 'NO ACTIVE TURN';
-                return;
-            }
-            const currentIndex = initiativeOrder[currentTurnIndex];
-            const currentRow = document.querySelector(`.participant[data-index="${currentIndex}"]`);
-            if (currentRow) {
-                const name = document.getElementById(`name-${currentIndex}`).value || 'UNNAMED';
-                currentTurnDisplay.textContent = `${name}'S TURN`;
-                currentRow.classList.add('current-turn');
-            } else {
-                currentTurnDisplay.textContent = 'NO ACTIVE TURN';
+        function previousTurn() {
+            if (participants.length > 0) {
+                currentTurnIndex = (currentTurnIndex - 1 + participants.length) % participants.length;
+                updateActiveTurn();
             }
         }
 
         function nextTurn() {
-            if (initiativeOrder.length === 0) return;
-            currentTurnIndex = (currentTurnIndex + 1) % initiativeOrder.length;
-            updateInitiativeTracker();
-        }
-
-        function previousTurn() {
-            if (initiativeOrder.length === 0) return;
-            currentTurnIndex = (currentTurnIndex - 1 + initiativeOrder.length) % initiativeOrder.length;
-            updateInitiativeTracker();
-        }
-
-        function exportData() {
-            const data = {
-                'combat-participants': JSON.parse(localStorage.getItem('combat-participants') || '[]')
-            };
-            const json = JSON.stringify(data, null, 2);
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'dm_combat_tracker.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (data['combat-participants']) {
-                        const tableBody = document.getElementById('combat-table-body');
-                        tableBody.innerHTML = '';
-                        participantCount = 0;
-                        initiativeOrder = [];
-                        data['combat-participants'].forEach((participant, index) => {
-                            const row = document.createElement('tr');
-                            row.className = `participant ${participant.type === 'NPC' ? 'npc-row' : ''}`;
-                            row.setAttribute('data-index', index);
-                            row.innerHTML = `
-                                <td>
-                                    <label><input type="radio" name="type-${index}" value="PC" ${participant.type === 'PC' ? 'checked' : ''} onchange="updateParticipant(${index})"> PC</label>
-                                    <label><input type="radio" name="type-${index}" value="NPC" ${participant.type === 'NPC' ? 'checked' : ''} onchange="updateParticipant(${index})"> NPC</label>
-                                </td>
-                                <td>
-                                    <input type="text" id="name-${index}" placeholder="NAME" value="${participant.name || ''}" onchange="saveParticipants()">
-                                    <div class="participant-details">
-                                        <div class="hp-container">
-                                            <div class="hp-inputs">
-                                                <input type="number" id="current-hp-${index}" min="0" value="${participant.currentHP || 10}" onchange="saveParticipants()">
-                                                <span>/</span>
-                                                <input type="number" id="total-hp-${index}" min="1" value="${participant.totalHP || 10}" onchange="saveParticipants()">
-                                            </div>
-                                            <div class="buttons">
-                                                <button onclick="changeHP(${index}, -1)">-1</button>
-                                                <button onclick="changeHP(${index}, 1)">+1</button>
-                                            </div>
-                                        </div>
-                                        <div class="ac-container">
-                                            <span>AC:</span>
-                                            <input type="number" id="ac-${index}" min="0" value="${participant.ac || 10}" style="display: ${participant.type === 'NPC' ? 'block' : 'none'};" placeholder="AC" onchange="saveParticipants()">
-                                        </div>
-                                    </div>
-                                </td>
-                                <td><input type="number" id="initiative-${index}" value="${participant.initiative || 0}" onchange="saveParticipants()"></td>
-                                <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
-                            `;
-                            tableBody.appendChild(row);
-                            initiativeOrder.push(index);
-                            participantCount = index + 1;
-                        });
-                        localStorage.setItem('combat-participants', JSON.stringify(data['combat-participants']));
-                        updateRemoveButtons();
-                        updateInitiativeTracker();
-                        alert('COMBAT TRACKER DATA IMPORTED SUCCESSFULLY!');
-                    }
-                } catch (err) {
-                    alert('ERROR IMPORTING DATA: INVALID JSON FILE.');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // Load saved data on page load
-        window.onload = function() {
-            const savedParticipants = localStorage.getItem('combat-participants');
-            if (savedParticipants) {
-                const participants = JSON.parse(savedParticipants);
-                const tableBody = document.getElementById('combat-table-body');
-                tableBody.innerHTML = '';
-                participantCount = 0;
-                initiativeOrder = [];
-                participants.forEach((participant, index) => {
-                    const row = document.createElement('tr');
-                    row.className = `participant ${participant.type === 'NPC' ? 'npc-row' : ''}`;
-                    row.setAttribute('data-index', index);
-                    row.innerHTML = `
-                        <td>
-                            <label><input type="radio" name="type-${index}" value="PC" ${participant.type === 'PC' ? 'checked' : ''} onchange="updateParticipant(${index})"> PC</label>
-                            <label><input type="radio" name="type-${index}" value="NPC" ${participant.type === 'NPC' ? 'checked' : ''} onchange="updateParticipant(${index})"> NPC</label>
-                        </td>
-                        <td>
-                            <input type="text" id="name-${index}" placeholder="NAME" value="${participant.name || ''}" onchange="saveParticipants()">
-                            <div class="participant-details">
-                                <div class="hp-container">
-                                    <div class="hp-inputs">
-                                        <input type="number" id="current-hp-${index}" min="0" value="${participant.currentHP || 10}" onchange="saveParticipants()">
-                                        <span>/</span>
-                                        <input type="number" id="total-hp-${index}" min="1" value="${participant.totalHP || 10}" onchange="saveParticipants()">
-                                    </div>
-                                    <div class="buttons">
-                                        <button onclick="changeHP(${index}, -1)">-1</button>
-                                        <button onclick="changeHP(${index}, 1)">+1</button>
-                                    </div>
-                                </div>
-                                <div class="ac-container">
-                                    <span>AC:</span>
-                                    <input type="number" id="ac-${index}" min="0" value="${participant.ac || 10}" style="display: ${participant.type === 'NPC' ? 'block' : 'none'};" placeholder="AC" onchange="saveParticipants()">
-                                </div>
-                            </div>
-                        </td>
-                        <td><input type="number" id="initiative-${index}" value="${participant.initiative || 0}" onchange="saveParticipants()"></td>
-                        <td><button class="remove-participant" onclick="removeParticipant(${index})">-</button></td>
-                    `;
-                    tableBody.appendChild(row);
-                    initiativeOrder.push(index);
-                    participantCount = index + 1;
-                });
-                updateRemoveButtons();
-                updateInitiativeTracker();
+            if (participants.length > 0) {
+                currentTurnIndex = (currentTurnIndex + 1) % participants.length;
+                updateActiveTurn();
             }
-        };
+        }
+
+        function endCombat() {
+            currentTurnIndex = -1;
+            updateActiveTurn();
+            resetInitiativeTimer();
+            resetCombatTimer();
+        }
     </script>
 </body>
 </html>
