@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D&D DM Toolbox</title>
     <style>
+        :root {
+            --type-width: 60px;
+            --initiative-width: 45px;
+        }
         body {
             font-family: Arial, sans-serif;
             background-color: #e6e6fa;
@@ -26,16 +30,22 @@
         }
         .participant-row {
             display: grid;
-            grid-template-columns: 60px 70vw min-content;
+            grid-template-columns: var(--type-width) 1fr var(--initiative-width);
             align-items: center;
             padding: 5px;
             border-bottom: 1px solid #d8bfd8;
-            max-width: 100%;
+            width: 100%;
+            max-width: calc(100vw - 20px);
             box-sizing: border-box;
+            overflow-x: hidden;
         }
         .participant-row > div, .participant-row > select {
             border-right: 1px solid #d8bfd8;
             padding-right: 3px;
+            box-sizing: border-box;
+        }
+        .participant-row > div:nth-child(2) {
+            padding-right: 0;
         }
         .participant-row > div:last-child {
             border-right: none;
@@ -44,21 +54,27 @@
             flex-direction: column;
             align-items: center;
             gap: 2px;
-            max-width: 45px;
+            max-width: var(--initiative-width);
             min-width: 0;
         }
         .participant-header {
             display: grid;
-            grid-template-columns: 60px 70vw min-content;
+            grid-template-columns: var(--type-width) 1fr var(--initiative-width);
             font-weight: bold;
             padding: 5px;
             background-color: #d8bfd8;
-            max-width: 100%;
+            width: 100%;
+            max-width: calc(100vw - 20px);
             box-sizing: border-box;
+            overflow-x: hidden;
         }
         .participant-header > div {
             border-right: 1px solid #9370db;
             padding-right: 3px;
+            box-sizing: border-box;
+        }
+        .participant-header > div:nth-child(2) {
+            padding-right: 0;
         }
         .participant-header > div:last-child {
             border-right: none;
@@ -66,7 +82,7 @@
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            max-width: 45px;
+            max-width: var(--initiative-width);
             min-width: 0;
         }
         .sort-button {
@@ -100,12 +116,14 @@
             display: flex;
             flex-direction: column;
             gap: 3px;
+            width: 100%;
             max-width: 100%;
             box-sizing: border-box;
             overflow: hidden;
         }
         .name-section {
             display: block;
+            width: 100%;
             max-width: 100%;
             box-sizing: border-box;
         }
@@ -113,6 +131,7 @@
             width: 100%;
             max-width: 100%;
             min-width: 0;
+            margin: 0;
             flex-shrink: 1;
             box-sizing: border-box;
         }
@@ -126,12 +145,10 @@
             overflow: hidden;
         }
         .conditions-section input {
-            flex: 1;
-            flex-shrink: 1;
-            margin: 2px 0;
+            flex: 1 1 0;
+            margin: 0;
             height: 18px;
-            min-width: 0;
-            max-width: calc((100% - 40px) / 4);
+            min-width: 15px;
             box-sizing: border-box;
         }
         .initiative-section {
@@ -213,13 +230,17 @@
             border: 3px solid #ffff00;
         }
         @media (max-width: 600px) {
+            :root {
+                --type-width: 50px;
+                --initiative-width: 50px;
+            }
             .participant-row, .participant-header {
-                grid-template-columns: 50px 1fr min-content;
+                grid-template-columns: var(--type-width) 1fr var(--initiative-width);
                 max-width: calc(100vw - 20px);
                 overflow-x: hidden;
             }
             .participant-row > div:last-child, .participant-header > div:last-child {
-                max-width: 50px;
+                max-width: var(--initiative-width);
             }
             .name-conditions {
                 max-width: calc(100vw - 70px);
@@ -228,21 +249,22 @@
             }
             .name-section input {
                 width: 100%;
-                max-width: 100%;
+                max-width: calc(100vw - 70px);
                 min-width: 0;
                 box-sizing: border-box;
             }
             .conditions-section {
                 flex-wrap: nowrap;
-                gap: 5px;
-                max-width: 100%;
+                gap: 4px;
+                max-width: calc(100vw - 70px);
                 box-sizing: border-box;
                 overflow: hidden;
             }
             .conditions-section input {
-                max-width: calc((100% - 20px) / 4);
-                min-width: 0;
-                font-size: 0.7em;
+                flex: 1 1 0;
+                width: calc(100% / 4);
+                min-width: 15px;
+                font-size: 0.65em;
                 box-sizing: border-box;
             }
             input[type="number"] {
@@ -351,13 +373,14 @@
             }
             conditionsSection.innerHTML = '';
             const isMobile = window.innerWidth <= 600;
-            const gap = isMobile ? 5 : 10;
+            const gap = isMobile ? 4 : 10;
             for (let i = 1; i <= numConditions; i++) {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.placeholder = `Condition ${i}`;
-                input.style.maxWidth = `calc((100% - ${(numConditions - 1) * gap}px) / ${numConditions})`;
-                input.style.minWidth = '0';
+                input.style.width = `calc(100% / ${numConditions})`;
+                input.style.minWidth = isMobile ? '15px' : '0';
+                input.style.fontSize = isMobile && numConditions >= 2 ? '0.65em' : '';
                 conditionsSection.appendChild(input);
             }
         }
