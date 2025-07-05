@@ -156,29 +156,10 @@
             align-items: center;
             margin-bottom: 10px;
         }
-        .heart {
-            background-color: #A52A2A; /* Red heart */
-            color: white;
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            clip-path: path('M30 18 C12 0, 0 24, 1.8 30 C0 48, 30 60, 30 60 C30 60, 60 48, 58.2 30 C60 24, 48 0, 30 18 Z');
-        }
         .hp-controls {
             display: flex;
             flex-direction: column;
             gap: 3px;
-        }
-        .hp-controls button {
-            width: 30px;
-            height: 30px;
-            padding: 0;
-            font-size: 16px;
-            line-height: 30px;
-            text-align: center;
         }
         .conditions {
             display: flex;
@@ -265,20 +246,8 @@
             .conditions input {
                 width: 150px;
             }
-            .heart {
-                width: 40px;
-                height: 40px;
-                font-size: 8px;
-                clip-path: path('M20 12 C8 0, 0 16, 1.2 20 C0 32, 20 40, 20 40 C20 40, 40 32, 38.8 20 C40 16, 32 0, 20 12 Z');
-            }
             .hp-section {
                 gap: 10px;
-            }
-            .hp-controls button {
-                width: 24px;
-                height: 24px;
-                font-size: 12px;
-                line-height: 24px;
             }
             .d20-decagon {
                 width: 50px;
@@ -325,7 +294,6 @@
             <input type="text" id="name" placeholder="NAME" onchange="updateCharacterName()">
             <span>THE</span>
             <input type="text" id="concept" placeholder="CHARACTER CONCEPT" onchange="updateCharacterName()">
-            <span id="full-name"></span>
         </div>
         <div class="info-content" id="character-info-info">
             Your character’s name and concept define their identity. Example: “Zavolorn the Healer” describes a healer named Zavolorn. Enter a name and a short description of their role or personality.
@@ -376,13 +344,6 @@
             <h2>HIT POINTS & CONDITIONS</h2>
         </div>
         <div class="hp-section">
-            <div class="hp-controls">
-                <div class="heart" id="hp-display">3/3</div>
-                <div>
-                    <button id="hp-minus">-</button>
-                    <button id="hp-plus">+</button>
-                </div>
-            </div>
             <div class="conditions">
                 <input type="text" id="condition-0" placeholder="CONDITION 1" onchange="saveCharacter()">
                 <input type="text" id="condition-1" placeholder="CONDITION 2" onchange="saveCharacter()">
