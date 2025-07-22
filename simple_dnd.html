@@ -345,10 +345,12 @@
         </div>
         <div class="hp-section">
             <div class="conditions">
-                <input type="text" id="condition-0" placeholder="CONDITION 1" onchange="saveCharacter()">
-                <input type="text" id="condition-1" placeholder="CONDITION 2" onchange="saveCharacter()">
-                <input type="text" id="condition-2" placeholder="CONDITION 3" onchange="saveCharacter()">
-            </div>
+    <div class="item" data-index="0">
+        <input type="text" id="condition-0" placeholder="CONDITION" onchange="saveCharacter()">
+        <button class="remove-button" id="remove-condition-0">-</button>
+    </div>
+    <button class="add-button" id="add-condition">+ ADD CONDITION</button>
+</div>
         </div>
         <div class="info-content" id="hp-info">
             You track Conditions — depicting narrative harm.<br><br>
