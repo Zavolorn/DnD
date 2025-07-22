@@ -135,10 +135,10 @@
             font-size: 14px;
             color: #4B2E0B;
         }
-        .identity-section, .gear-section, .abilities-section {
+        .identity-section, .gear-section, .abilities-section, .conditions-section {
             margin-bottom: 15px;
         }
-        .identity-section div, .gear-section, .abilities-section {
+        .identity-section div, .gear-section, .abilities-section, .conditions-section {
             margin-bottom: 10px;
         }
         .item {
@@ -160,14 +160,6 @@
             display: flex;
             flex-direction: column;
             gap: 3px;
-        }
-        .conditions {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .conditions input {
-            width: 200px;
         }
         .dice-roller {
             margin-bottom: 15px;
@@ -242,9 +234,6 @@
             }
             .character-name input {
                 width: 120px;
-            }
-            .conditions input {
-                width: 150px;
             }
             .hp-section {
                 gap: 10px;
@@ -343,18 +332,16 @@
         <div class="section-header">
             <h2>CONDITIONS</h2>
         </div>
-        <div class="hp-section">
-            <div class="conditions">
-    <div class="item" data-index="0">
-        <input type="text" id="condition-0" placeholder="CONDITION" onchange="saveCharacter()">
-        <button class="remove-button" id="remove-condition-0">-</button>
-    </div>
-    <button class="add-button" id="add-condition">+ ADD CONDITION</button>
-</div>
+        <div class="conditions-section">
+            <div class="item" data-index="0">
+                <input type="text" id="condition-0" placeholder="CONDITION" onchange="saveCharacter()">
+                <button class="remove-button" id="remove-condition-0">-</button>
+            </div>
+            <button class="add-button" id="add-condition">+ ADD CONDITION</button>
         </div>
         <div class="info-content" id="hp-info">
             You track Conditions — depicting narrative harm.<br><br>
-            ❌ Conditions (3 slots)<br>
+            ❌ Conditions (dynamic slots)<br>
             Represent lasting harm: injury, fatigue, fear, corruption, exposure, etc.<br>
             Take a Condition when an enemy or narrative failure warrants lasting consequences.<br><br>
             Examples: “Burned,” “Disoriented,” “Possessed,” “Shattered Hand,” “Hunted”<br><br>
@@ -447,6 +434,7 @@
         let aspirationCount = 1;
         let gearCount = 1;
         let abilityCount = 1;
+        let conditionCount = 1;
 
         // Helper function to add click and touchstart events
         function addEvent(element, handler, id) {
@@ -704,10 +692,62 @@
             }
         }
 
+        function addCondition() {
+            try {
+                const container = document.querySelector('.conditions-section');
+                if (!container) throw new Error('Conditions container not found');
+                const addButton = container.querySelector('.add-button');
+                if (!addButton) throw new Error('Add Condition button not found');
+                const index = conditionCount++;
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.setAttribute('data-index', index);
+                item.innerHTML = `
+                    <input type="text" id="condition-${index}" placeholder="CONDITION" onchange="saveCharacter()">
+                    <button class="remove-button" id="remove-condition-${index}">-</button>
+                `;
+                container.insertBefore(item, addButton);
+                updateRemoveButtons('condition');
+                addEvent(document.getElementById(`remove-condition-${index}`), () => removeCondition(index), `remove-condition-${index}`);
+                saveCharacter();
+                console.log(`Added condition-${index}`);
+            } catch (err) {
+                console.error('Error in addCondition:', err);
+            }
+        }
+
+        function removeCondition(index) {
+            try {
+                if (conditionCount <= 1) {
+                    console.log('Cannot remove last condition; minimum one required');
+                    return;
+                }
+                const item = document.querySelector(`.conditions-section .item[data-index="${index}"]`);
+                if (!item) throw new Error(`Condition item ${index} not found`);
+                item.remove();
+                conditionCount--;
+                updateRemoveButtons('condition');
+                saveCharacter();
+                console.log(`Removed condition-${index}`);
+            } catch (err) {
+                console.error('Error in removeCondition:', err);
+            }
+        }
+
         function updateRemoveButtons(type) {
             try {
-                const count = type === 'trait' ? traitCount : type === 'flaw' ? flawCount : type === 'aspiration' ? aspirationCount : type === 'gear' ? gearCount : abilityCount;
-                const selector = type === 'trait' ? '.traits' : type === 'flaw' ? '.flaws' : type === 'aspiration' ? '.aspirations' : type === 'gear' ? '.gear-section' : '.abilities-section';
+                const count = type === 'trait' ? traitCount : 
+                             type === 'flaw' ? flawCount : 
+                             type === 'aspiration' ? aspirationCount : 
+                             type === 'gear' ? gearCount : 
+                             type === 'ability' ? abilityCount : 
+                             conditionCount;
+                const selector = type === 'trait' ? '.traits' : 
+                                type === 'flaw' ? '.flaws' : 
+                                type === 'aspiration' ? '.aspirations' : 
+                                type === 'gear' ? '.gear-section' : 
+                                type === 'ability' ? '.abilities-section' : 
+                                '.conditions-section';
                 const buttons = document.querySelectorAll(`${selector} .remove-button`);
                 buttons.forEach(button => {
                     button.style.display = count > 1 ? 'block' : 'none';
@@ -715,20 +755,6 @@
                 console.log(`Updated remove buttons for ${type}, count: ${count}`);
             } catch (err) {
                 console.error('Error in updateRemoveButtons:', err);
-            }
-        }
-
-        function changeHP(amount) {
-            try {
-                const hpDisplay = document.getElementById('hp-display');
-                if (!hpDisplay) throw new Error('HP display not found');
-                let hp = parseInt(hpDisplay.textContent.split('/')[0]) || 3;
-                hp = Math.min(3, Math.max(0, hp + amount));
-                hpDisplay.textContent = `${hp}/3`;
-                saveCharacter();
-                console.log(`HP changed to ${hp}/3`);
-            } catch (err) {
-                console.error('Error in changeHP:', err);
             }
         }
 
@@ -759,12 +785,7 @@
                     traits: [],
                     flaws: [],
                     aspirations: [],
-                    hp: parseInt(document.getElementById('hp-display').textContent.split('/')[0]) || 3,
-                    conditions: [
-                        document.getElementById('condition-0').value,
-                        document.getElementById('condition-1').value,
-                        document.getElementById('condition-2').value
-                    ],
+                    conditions: [],
                     gear: [],
                     abilities: [],
                     notes: document.getElementById('notes').value
@@ -783,6 +804,11 @@
                     const index = item.getAttribute('data-index');
                     const input = document.getElementById(`aspiration-${index}`);
                     if (input) character.aspirations.push(input.value);
+                });
+                document.querySelectorAll('.conditions-section .item').forEach(item => {
+                    const index = item.getAttribute('data-index');
+                    const input = document.getElementById(`condition-${index}`);
+                    if (input) character.conditions.push(input.value);
                 });
                 document.querySelectorAll('.gear-section .item').forEach(item => {
                     const index = item.getAttribute('data-index');
@@ -829,10 +855,6 @@
                         document.getElementById('name').value = character.name || '';
                         document.getElementById('concept').value = character.concept || '';
                         updateCharacterName();
-                        document.getElementById('hp-display').textContent = `${Math.min(character.hp || 3, 3)}/3`;
-                        document.getElementById('condition-0').value = character.conditions?.[0] || '';
-                        document.getElementById('condition-1').value = character.conditions?.[1] || '';
-                        document.getElementById('condition-2').value = character.conditions?.[2] || '';
                         document.getElementById('notes').value = character.notes || '';
 
                         // Clear and rebuild traits
@@ -894,6 +916,26 @@
                         aspirationsContainer.innerHTML += '<button class="add-button" id="add-aspiration">+ ADD ASPIRATION</button>';
                         addEvent(document.getElementById('add-aspiration'), addAspiration, 'add-aspiration');
                         updateRemoveButtons('aspiration');
+
+                        // Clear and rebuild conditions
+                        const conditionsContainer = document.querySelector('.conditions-section');
+                        conditionsContainer.innerHTML = '';
+                        conditionCount = 0;
+                        (character.conditions || ['']).forEach((condition, index) => {
+                            const item = document.createElement('div');
+                            item.className = 'item';
+                            item.setAttribute('data-index', index);
+                            item.innerHTML = `
+                                <input type="text" id="condition-${index}" placeholder="CONDITION" value="${condition}" onchange="saveCharacter()">
+                                <button class="remove-button" id="remove-condition-${index}">-</button>
+                            `;
+                            conditionsContainer.appendChild(item);
+                            addEvent(document.getElementById(`remove-condition-${index}`), () => removeCondition(index), `remove-condition-${index}`);
+                            conditionCount = index + 1;
+                        });
+                        conditionsContainer.innerHTML += '<button class="add-button" id="add-condition">+ ADD CONDITION</button>';
+                        addEvent(document.getElementById('add-condition'), addCondition, 'add-condition');
+                        updateRemoveButtons('condition');
 
                         // Clear and rebuild gear
                         const gearContainer = document.querySelector('.gear-section');
@@ -964,8 +1006,8 @@
                 addEvent(document.getElementById('remove-gear-0'), () => removeGear(0), 'remove-gear-0');
                 addEvent(document.getElementById('add-ability'), addAbility, 'add-ability');
                 addEvent(document.getElementById('remove-ability-0'), () => removeAbility(0), 'remove-ability-0');
-                addEvent(document.getElementById('hp-minus'), () => changeHP(-1), 'hp-minus');
-                addEvent(document.getElementById('hp-plus'), () => changeHP(1), 'hp-plus');
+                addEvent(document.getElementById('add-condition'), addCondition, 'add-condition');
+                addEvent(document.getElementById('remove-condition-0'), () => removeCondition(0), 'remove-condition-0');
                 addEvent(document.getElementById('d20-result'), rollD20, 'd20-result');
                 addEvent(document.getElementById('save-notes'), saveCharacter, 'save-notes');
                 addEvent(document.getElementById('export-character'), exportCharacter, 'export-character');
@@ -985,10 +1027,6 @@
                     document.getElementById('name').value = character.name || '';
                     document.getElementById('concept').value = character.concept || '';
                     updateCharacterName();
-                    document.getElementById('hp-display').textContent = `${Math.min(character.hp || 3, 3)}/3`;
-                    document.getElementById('condition-0').value = character.conditions?.[0] || '';
-                    document.getElementById('condition-1').value = character.conditions?.[1] || '';
-                    document.getElementById('condition-2').value = character.conditions?.[2] || '';
                     document.getElementById('notes').value = character.notes || '';
 
                     // Load traits
@@ -1050,6 +1088,26 @@
                     aspirationsContainer.innerHTML += '<button class="add-button" id="add-aspiration">+ ADD ASPIRATION</button>';
                     addEvent(document.getElementById('add-aspiration'), addAspiration, 'add-aspiration');
                     updateRemoveButtons('aspiration');
+
+                    // Load conditions
+                    const conditionsContainer = document.querySelector('.conditions-section');
+                    conditionsContainer.innerHTML = '';
+                    conditionCount = 0;
+                    (character.conditions || ['']).forEach((condition, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'item';
+                        item.setAttribute('data-index', index);
+                        item.innerHTML = `
+                            <input type="text" id="condition-${index}" placeholder="CONDITION" value="${condition}" onchange="saveCharacter()">
+                            <button class="remove-button" id="remove-condition-${index}">-</button>
+                        `;
+                        conditionsContainer.appendChild(item);
+                        addEvent(document.getElementById(`remove-condition-${index}`), () => removeCondition(index), `remove-condition-${index}`);
+                        conditionCount = index + 1;
+                    });
+                    conditionsContainer.innerHTML += '<button class="add-button" id="add-condition">+ ADD CONDITION</button>';
+                    addEvent(document.getElementById('add-condition'), addCondition, 'add-condition');
+                    updateRemoveButtons('condition');
 
                     // Load gear
                     const gearContainer = document.querySelector('.gear-section');
