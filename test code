@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D DM Toolbox</title>
+    <style>
+        :root {
+            --type-width: 60px;
+            --initiative-width: 45px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e6e6fa;
+            color: #333;
+            margin: 10px;
+            overflow-x: hidden;
+        }
+        h1, h2 {
+            color: #4b0082;
+        }
+        .combat-tracker, .time-tracker, .combat-controls {
+            background-color: #f0f0ff;
+            border: 1px solid #9370db;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .participant-row {
+            display: grid;
+            grid-template-columns: var(--type-width) 1fr var(--initiative-width);
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #d8bfd8;
+            width: 100%;
+            max-width: calc(100vw - 20px);
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        .participant-row > div, .participant-row > select {
+            border-right: 1px solid #d8bfd8;
+            padding-right: 3px;
+            box-sizing: border-box;
+        }
+        .participant-row > div:nth-child(2) {
+            padding-right: 0;
+        }
+        .participant-row > div:last-child {
+            border-right: none;
+            padding-right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            max-width: var(--initiative-width);
+            min-width: 0;
+        }
+        .participant-header {
+            display: grid;
+            grid-template-columns: var(--type-width) 1fr var(--initiative-width);
+            font-weight: bold;
+            padding: 5px;
+            background-color: #d8bfd8;
+            width: 100%;
+            max-width: calc(100vw - 20px);
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        .participant-header > div {
+            border-right: 1px solid #9370db;
+            padding-right: 3px;
+            box-sizing: border-box;
+        }
+        .participant-header > div:nth-child(2) {
+            padding-right: 0;
+        }
+        .participant-header > div:last-child {
+            border-right: none;
+            padding-right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            max-width: var(--initiative-width);
+            min-width: 0;
+        }
+        .sort-button {
+            background-color: #6a5acd;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .sort-button:hover {
+            background-color: #483d8b;
+        }
+        .type-section {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            align-items: center;
+        }
+        .dr-dead-section {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 3px;
+            width: 100%;
+            justify-content: center;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .name-conditions {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .name-section {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .name-section input {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            margin: 0;
+            flex-shrink: 1;
+            box-sizing: border-box;
+        }
+        .conditions-section {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+        .conditions-section input {
+            flex: 1 1 0;
+            margin: 0;
+            height: 18px;
+            min-width: 15px;
+            box-sizing: border-box;
+        }
+        .initiative-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            flex-shrink: 0;
+            min-width: 0;
+        }
+        select, input[type="text"], input[type="number"], input[type="checkbox"] {
+            background-color: #ffffff;
+            color: #000000;
+            border: 1px solid #483d8b;
+            padding: 3px;
+            border-radius: 4px;
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+        input[type="number"] {
+            width: 30px;
+        }
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+        button {
+            background-color: #6a5acd;
+            color: white;
+            border: none;
+            padding: 3px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .remove-button {
+            padding: 2px 6px;
+            font-size: 12px;
+            width: 20px;
+        }
+        button:hover, select:hover, input:hover {
+            background-color: #483d8b;
+        }
+        .add-participant, .combat-control-btn, .time-control-btn {
+            background-color: #6a5acd;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            margin: 3px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .add-participant:hover, .combat-control-btn:hover, .time-control-btn:hover {
+            background-color: #483d8b;
+        }
+        .time-display {
+            font-size: 1.2em;
+            color: #4b0082;
+            margin: 5px 0;
+        }
+        .npc-trivial {
+            background-color: #b3e5fc;
+        }
+        .npc-standard {
+            background-color: #ffe6e6;
+        }
+        .npc-elite {
+            background-color: #ffcc99;
+        }
+        .npc-boss {
+            background-color: #ff9999;
+        }
+        .npc-nemesis {
+            background-color: #cc66cc;
+        }
+        .dead-row {
+            background-color: #d3d3d3;
+        }
+        .active-turn {
+            border: 3px solid #ffff00;
+        }
+        @media (max-width: 600px) {
+            :root {
+                --type-width: 50px;
+                --initiative-width: 50px;
+            }
+            .participant-row, .participant-header {
+                grid-template-columns: var(--type-width) 1fr var(--initiative-width);
+                max-width: calc(100vw - 20px);
+                overflow-x: hidden;
+            }
+            .participant-row > div:last-child, .participant-header > div:last-child {
+                max-width: var(--initiative-width);
+            }
+            .name-conditions {
+                max-width: calc(100vw - 70px);
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+            .name-section input {
+                width: 100%;
+                max-width: calc(100vw - 70px);
+                min-width: 0;
+                box-sizing: border-box;
+            }
+            .conditions-section {
+                flex-wrap: nowrap;
+                gap: 4px;
+                max-width: calc(100vw - 70px);
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+            .conditions-section input {
+                flex: 1 1 0;
+                width: calc(100% / 4);
+                min-width: 15px;
+                font-size: 0.65em;
+                box-sizing: border-box;
+            }
+            input[type="number"] {
+                width: 25px;
+            }
+            input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+            }
+            .sort-button, .remove-button {
+                padding: 2px 5px;
+                font-size: 0.75em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>D&D DM TOOLBOX</h1>
+
+    <div class="combat-tracker">
+        <h2>COMBAT TRACKER</h2>
+        <div class="participant-header">
+            <div>Type</div>
+            <div>Name</div>
+            <div><button class="sort-button" onclick="sortParticipants()">Sort</button></div>
+        </div>
+        <div id="participant-list">
+            <div class="participant-row">
+                <div class="type-section">
+                    <select onchange="updateRowStyle(this)">
+                        <option value="PC">PC</option>
+                        <option value="NPC-Trivial">NPC-Trivial</option>
+                        <option value="NPC-Standard">NPC-Standard</option>
+                        <option value="NPC-Elite">NPC-Elite</option>
+                        <option value="NPC-Boss">NPC-Boss</option>
+                        <option value="NPC-Nemesis">NPC-Nemesis</option>
+                    </select>
+                    <div class="dr-dead-section">
+                        <input type="number" placeholder="DR" value="1">
+                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)" value="💀">
+                    </div>
+                </div>
+                <div>
+                    <div class="name-conditions">
+                        <div class="name-section">
+                            <input type="text" placeholder="Name" class="name-input">
+                        </div>
+                        <div class="conditions-section">
+                            <input type="text" placeholder="Condition 1">
+                            <input type="text" placeholder="Condition 2">
+                            <input type="text" placeholder="Condition 3">
+                        </div>
+                    </div>
+                </div>
+                <div class="initiative-section">
+                    <input type="number" placeholder="Init">
+                    <button class="remove-button" onclick="removeParticipant(this)">-</button>
+                </div>
+            </div>
+        </div>
+        <button class="add-participant" onclick="addParticipant()">+ ADD PARTICIPANT</button>
+    </div>
+
+    <div class="combat-controls">
+        <h2 id="active-turn">NO ACTIVE TURN</h2>
+        <button class="combat-control-btn" onclick="startCombat()">START COMBAT</button>
+        <button class="combat-control-btn" onclick="previousTurn()">PREVIOUS</button>
+        <button class="combat-control-btn" onclick="nextTurn()">NEXT</button>
+        <button class="combat-control-btn" onclick="endCombat()">END COMBAT</button>
+    </div>
+
+    <div class="time-tracker">
+        <h2>TIME & INITIATIVE TRACKER</h2>
+        <div class="time-display" id="initiative-timer">00:00.0</div>
+        <button class="time-control-btn" onclick="toggleInitiativeTimer()">PAUSE/RESUME</button>
+        <button class="time-control-btn" onclick="resetInitiativeTimer()">RESET</button>
+    </div>
+
+    <div class="time-tracker">
+        <div class="time-display" id="combat-timer">05:00</div>
+        <button class="time-control-btn" onclick="toggleCombatTimer()">START/PAUSE</button>
+        <button class="time-control-btn" onclick="resetCombatTimer()">RESET</button>
+    </div>
+
+    <script>
+        let initiativeTime = 0;
+        let combatTime = 5 * 60 * 1000;
+        let initiativeTimerRunning = false;
+        let combatTimerRunning = false;
+        let initiativeInterval, combatInterval;
+        let currentTurnIndex = -1;
+        let participants = [];
+
+        function updateConditions(select) {
+            const row = select.closest('.participant-row');
+            const conditionsSection = row.querySelector('.conditions-section');
+            const type = select.value;
+            let numConditions = 0;
+            switch (type) {
+                case 'PC': numConditions = 3; break;
+                case 'NPC-Trivial': numConditions = 0; break;
+                case 'NPC-Standard': numConditions = 1; break;
+                case 'NPC-Elite': numConditions = 2; break;
+                case 'NPC-Boss': numConditions = 3; break;
+                case 'NPC-Nemesis': numConditions = 4; break;
+            }
+            conditionsSection.innerHTML = '';
+            const isMobile = window.innerWidth <= 600;
+            const gap = isMobile ? 4 : 10;
+            for (let i = 1; i <= numConditions; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = `Condition ${i}`;
+                input.style.width = `calc(100% / ${numConditions})`;
+                input.style.minWidth = isMobile ? '15px' : '0';
+                input.style.fontSize = isMobile && numConditions >= 2 ? '0.65em' : '';
+                conditionsSection.appendChild(input);
+            }
+        }
+
+        function updateDR(select) {
+            const row = select.closest('.participant-row');
+            const drInput = row.querySelector('.dr-dead-section input[type="number"]');
+            const type = select.value;
+            let defaultDR;
+            switch (type) {
+                case 'PC': defaultDR = 1; break;
+                case 'NPC-Trivial': defaultDR = 10; break;
+                case 'NPC-Standard': defaultDR = 12; break;
+                case 'NPC-Elite': defaultDR = 14; break;
+                case 'NPC-Boss': defaultDR = 16; break;
+                case 'NPC-Nemesis': defaultDR = 18; break;
+            }
+            drInput.value = defaultDR;
+        }
+
+        function updateRowStyle(select) {
+            const row = select.closest('.participant-row');
+            row.classList.remove('npc-trivial', 'npc-standard', 'npc-elite', 'npc-boss', 'npc-nemesis', 'dead-row');
+            switch (select.value) {
+                case 'NPC-Trivial': row.classList.add('npc-trivial'); break;
+                case 'NPC-Standard': row.classList.add('npc-standard'); break;
+                case 'NPC-Elite': row.classList.add('npc-elite'); break;
+                case 'NPC-Boss': row.classList.add('npc-boss'); break;
+                case 'NPC-Nemesis': row.classList.add('npc-nemesis'); break;
+                case 'PC': break;
+            }
+            updateConditions(select);
+            updateDR(select);
+            checkRowStatus(select);
+        }
+
+        function checkRowStatus(element) {
+            const row = element.closest('.participant-row');
+            const deadCheckbox = row.querySelector('.type-section input[type="checkbox"]');
+            row.classList.remove('dead-row');
+            if (deadCheckbox && deadCheckbox.checked) {
+                row.classList.add('dead-row');
+            }
+        }
+
+        function addParticipant() {
+            const participantList = document.getElementById('participant-list');
+            const newParticipant = document.createElement('div');
+            newParticipant.className = 'participant-row';
+            newParticipant.innerHTML = `
+                <div class="type-section">
+                    <select onchange="updateRowStyle(this)">
+                        <option value="PC">PC</option>
+                        <option value="NPC-Trivial">NPC-Trivial</option>
+                        <option value="NPC-Standard">NPC-Standard</option>
+                        <option value="NPC-Elite">NPC-Elite</option>
+                        <option value="NPC-Boss">NPC-Boss</option>
+                        <option value="NPC-Nemesis">NPC-Nemesis</option>
+                    </select>
+                    <div class="dr-dead-section">
+                        <input type="number" placeholder="DR" value="1">
+                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)" value="💀">
+                    </div>
+                </div>
+                <div>
+                    <div class="name-conditions">
+                        <div class="name-section">
+                            <input type="text" placeholder="Name" class="name-input">
+                        </div>
+                        <div class="conditions-section">
+                            <input type="text" placeholder="Condition 1">
+                            <input type="text" placeholder="Condition 2">
+                            <input type="text" placeholder="Condition 3">
+                        </div>
+                    </div>
+                </div>
+                <div class="initiative-section">
+                    <input type="number" placeholder="Init">
+                    <button class="remove-button" onclick="removeParticipant(this)">-</button>
+                </div>
+            `;
+            participantList.appendChild(newParticipant);
+            updateRowStyle(newParticipant.querySelector('select'));
+            updateParticipants();
+        }
+
+        function removeParticipant(button) {
+            const row = button.closest('.participant-row');
+            const wasActive = row.classList.contains('active-turn');
+            const index = Array.from(document.getElementsByClassName('participant-row')).indexOf(row);
+            row.remove();
+            updateParticipants();
+            if (wasActive && participants.length > 0) {
+                currentTurnIndex = Math.min(index, participants.length - 1);
+            } else if (participants.length === 0) {
+                currentTurnIndex = -1;
+            }
+            updateActiveTurn();
+        }
+
+        function sortParticipants() {
+            const participantList = document.getElementById('participant-list');
+            const rows = Array.from(participantList.getElementsByClassName('participant-row'));
+            const activeRow = rows.find(row => row.classList.contains('active-turn'));
+            const activeIndex = activeRow ? rows.indexOf(activeRow) : -1;
+
+            const sortedRows = rows.sort((a, b) => {
+                const initA = parseInt(a.querySelector('.initiative-section input[type="number"]').value) || 0;
+                const initB = parseInt(b.querySelector('.initiative-section input[type="number"]').value) || 0;
+                return initB - initA;
+            });
+
+            participantList.innerHTML = '';
+            sortedRows.forEach(row => participantList.appendChild(row));
+            updateParticipants();
+
+            if (activeIndex >= 0 && participants.length > 0) {
+                currentTurnIndex = Math.min(activeIndex, participants.length - 1);
+            } else if (participants.length === 0) {
+                currentTurnIndex = -1;
+            }
+            updateActiveTurn();
+        }
+
+        function updateParticipants() {
+            participants = Array.from(document.getElementsByClassName('participant-row')).map(row => ({
+                name: row.querySelector('.name-input').value || 'Unnamed',
+                initiative: parseInt(row.querySelector('.initiative-section input[type="number"]').value) || 0
+            }));
+        }
+
+        function updateActiveTurn() {
+            const rows = document.getElementsByClassName('participant-row');
+            Array.from(rows).forEach(row => row.classList.remove('active-turn'));
+            if (currentTurnIndex >= 0 && currentTurnIndex < rows.length) {
+                rows[currentTurnIndex].classList.add('active-turn');
+                document.getElementById('active-turn').textContent = `Active Turn: ${participants[currentTurnIndex].name}`;
+            } else {
+                document.getElementById('active-turn').textContent = 'NO ACTIVE TURN';
+            }
+        }
+
+        function formatTime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            const millis = Math.floor((ms % 1000) / 100);
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${millis}`;
+        }
+
+        function formatCombatTime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateInitiativeTimer() {
+            if (initiativeTimerRunning) {
+                initiativeTime += 100;
+                document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
+            }
+        }
+
+        function updateCombatTimer() {
+            if (combatTimerRunning && combatTime > 0) {
+                combatTime -= 100;
+                document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
+            }
+        }
+
+        function toggleInitiativeTimer() {
+            initiativeTimerRunning = !initiativeTimerRunning;
+            if (initiativeTimerRunning && !initiativeInterval) {
+                initiativeInterval = setInterval(updateInitiativeTimer, 100);
+            } else if (!initiativeTimerRunning && initiativeInterval) {
+                clearInterval(initiativeInterval);
+                initiativeInterval = null;
+            }
+        }
+
+        function resetInitiativeTimer() {
+            initiativeTimerRunning = false;
+            clearInterval(initiativeInterval);
+            initiativeInterval = null;
+            initiativeTime = 0;
+            document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
+        }
+
+        function toggleCombatTimer() {
+            combatTimerRunning = !combatTimerRunning;
+            if (combatTimerRunning && !combatInterval) {
+                combatInterval = setInterval(updateCombatTimer, 100);
+            } else if (!combatTimerRunning && combatInterval) {
+                clearInterval(combatInterval);
+                combatInterval = null;
+            }
+        }
+
+        function resetCombatTimer() {
+            combatTimerRunning = false;
+            clearInterval(combatInterval);
+            combatInterval = null;
+            combatTime = 5 * 60 * 1000;
+            document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
+        }
+
+        function startCombat() {
+            updateParticipants();
+            if (participants.length > 0) {
+                currentTurnIndex = 0;
+                updateActiveTurn();
+            }
+        }
+
+        function previousTurn() {
+            if (participants.length > 0) {
+                currentTurnIndex = (currentTurnIndex - 1 + participants.length) % participants.length;
+                updateActiveTurn();
+            }
+        }
+
+        function nextTurn() {
+            if (participants.length > 0) {
+                currentTurnIndex = (currentTurnIndex + 1) % participants.length;
+                updateActiveTurn();
+            }
+        }
+
+        function endCombat() {
+            currentTurnIndex = -1;
+            updateActiveTurn();
+            resetInitiativeTimer();
+            resetCombatTimer();
+        }
+    </script>
+</body>
+</html>
