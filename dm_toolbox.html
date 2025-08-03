@@ -399,7 +399,18 @@
             updateConditions(select);
             checkRowStatus(select);
         }
-
+ // Set default DR based on type
+    const drInput = row.querySelector('.dr-dead-section input[type="number"]');
+    if (drInput) {
+        switch (select.value) {
+            case 'NPC-Trivial': drInput.value = 10; break;
+            case 'NPC-Standard': drInput.value = 12; break;
+            case 'NPC-Elite': drInput.value = 14; break;
+            case 'NPC-Boss': drInput.value = 16; break;
+            case 'NPC-Nemesis': drInput.value = 18; break;
+            case 'PC': drInput.value = 15; break;
+        }
+    }
         function checkRowStatus(element) {
             const row = element.closest('.participant-row');
             const deadCheckbox = row.querySelector('.type-section input[type="checkbox"]');
