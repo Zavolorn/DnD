@@ -168,8 +168,8 @@
             box-sizing: border-box;
             max-width: 100%;
         }
-        input[type="number"] {
-            width: 30px;
+        .dr-dead-section input[type="number"] {
+            width: 40px;
         }
         input[type="checkbox"] {
             width: 18px;
@@ -267,7 +267,7 @@
                 font-size: 0.65em;
                 box-sizing: border-box;
             }
-            input[type="number"] {
+            .dr-dead-section input[type="number"] {
                 width: 25px;
             }
             input[type="checkbox"] {
@@ -401,6 +401,19 @@
             drInput.value = defaultDR;
         }
 
+        function updateName(select) {
+            const row = select.closest('.participant-row');
+            const nameInput = row.querySelector('.name-input');
+            const type = select.value;
+            if (type.startsWith('NPC-')) {
+                nameInput.value = type;
+                nameInput.placeholder = type;
+            } else {
+                nameInput.value = '';
+                nameInput.placeholder = 'Name';
+            }
+        }
+
         function updateRowStyle(select) {
             const row = select.closest('.participant-row');
             row.classList.remove('npc-trivial', 'npc-standard', 'npc-elite', 'npc-boss', 'npc-nemesis', 'dead-row');
@@ -414,6 +427,7 @@
             }
             updateConditions(select);
             updateDR(select);
+            updateName(select);
             checkRowStatus(select);
         }
 
