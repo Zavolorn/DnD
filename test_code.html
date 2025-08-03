@@ -303,24 +303,24 @@
                         <option value="NPC-Nemesis">NPC-Nemesis</option>
                     </select>
                     <div class="dr-dead-section">
-                        <input type="number" placeholder="DR" value="1" onchange="saveState()">
-                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this); saveState()" value="💀">
-                    </div>
+                        <input type="number" placeholder="DR" value="1">
+                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)">
+                        </div>
                 </div>
                 <div>
                     <div class="name-conditions">
                         <div class="name-section">
-                            <input type="text" placeholder="Name" class="name-input" onchange="saveState()">
+                            <input type="text" placeholder="Name" class="name-input">
                         </div>
                         <div class="conditions-section">
-                            <input type="text" placeholder="Condition 1" onchange="saveState()">
-                            <input type="text" placeholder="Condition 2" onchange="saveState()">
-                            <input type="text" placeholder="Condition 3" onchange="saveState()">
+                            <input type="text" placeholder="Condition 1">
+                            <input type="text" placeholder="Condition 2">
+                            <input type="text" placeholder="Condition 3">
                         </div>
                     </div>
                 </div>
                 <div class="initiative-section">
-                    <input type="number" placeholder="Init" onchange="saveState()">
+                    <input type="number" placeholder="Init">
                     <button class="remove-button" onclick="removeParticipant(this)">-</button>
                 </div>
             </div>
@@ -359,99 +359,113 @@
         let participants = [];
 
         function saveState() {
-            const rows = Array.from(document.getElementsByClassName('participant-row'));
-            const state = {
-                participants: rows.map(row => ({
-                    type: row.querySelector('.type-section select').value,
-                    dr: row.querySelector('.dr-dead-section input[type="number"]').value,
-                    dead: row.querySelector('.dr-dead-section input[type="checkbox"]').checked,
-                    name: row.querySelector('.name-input').value,
-                    conditions: Array.from(row.querySelectorAll('.conditions-section input')).map(input => input.value),
-                    initiative: row.querySelector('.initiative-section input[type="number"]').value
-                })),
-                initiativeTime,
-                combatTime,
-                initiativeTimerRunning,
-                combatTimerRunning,
-                currentTurnIndex
-            };
-            localStorage.setItem('combatTrackerState', JSON.stringify(state));
+            try {
+                const rows = Array.from(document.getElementsByClassName('participant-row'));
+                const state = {
+                    participants: rows.map(row => ({
+                        type: row.querySelector('.type-section select').value,
+                        dr: row.querySelector('.dr-dead-section input[type="number"]').value || '1',
+                        dead: row.querySelector('.dr-dead-section input[type="checkbox"]').checked,
+                        name: row.querySelector('.name-input').value || '',
+                        conditions: Array.from(row.querySelectorAll('.conditions-section input')).map(input => input.value || ''),
+                        initiative: row.querySelector('.initiative-section input[type="number"]').value || ''
+                    })),
+                    initiativeTime,
+                    combatTime,
+                    initiativeTimerRunning,
+                    combatTimerRunning,
+                    currentTurnIndex
+                };
+                localStorage.setItem('combatTrackerState', JSON.stringify(state));
+                console.log('State saved successfully');
+            } catch (error) {
+                console.error('Error saving state:', error);
+            }
         }
 
         function loadState() {
-            const state = JSON.parse(localStorage.getItem('combatTrackerState'));
-            if (!state) return;
+            try {
+                const state = JSON.parse(localStorage.getItem('combatTrackerState'));
+                if (!state || !state.participants) {
+                    console.log('No saved state found, using default');
+                    updateRowStyle(document.querySelector('.participant-row select'));
+                    return;
+                }
 
-            initiativeTime = state.initiativeTime || 0;
-            combatTime = state.combatTime || 5 * 60 * 1000;
-            initiativeTimerRunning = state.initiativeTimerRunning || false;
-            combatTimerRunning = state.combatTimerRunning || false;
-            currentTurnIndex = state.currentTurnIndex || -1;
+                initiativeTime = state.initiativeTime || 0;
+                combatTime = state.combatTime || 5 * 60 * 1000;
+                initiativeTimerRunning = state.initiativeTimerRunning || false;
+                combatTimerRunning = state.combatTimerRunning || false;
+                currentTurnIndex = state.currentTurnIndex || -1;
 
-            const participantList = document.getElementById('participant-list');
-            participantList.innerHTML = '';
+                const participantList = document.getElementById('participant-list');
+                participantList.innerHTML = '';
 
-            state.participants.forEach(participant => {
-                const newParticipant = document.createElement('div');
-                newParticipant.className = 'participant-row';
-                newParticipant.innerHTML = `
-                    <div class="type-section">
-                        <select onchange="updateRowStyle(this)">
-                            <option value="PC">PC</option>
-                            <option value="NPC-Trivial">NPC-Trivial</option>
-                            <option value="NPC-Standard">NPC-Standard</option>
-                            <option value="NPC-Elite">NPC-Elite</option>
-                            <option value="NPC-Boss">NPC-Boss</option>
-                            <option value="NPC-Nemesis">NPC-Nemesis</option>
-                        </select>
-                        <div class="dr-dead-section">
-                            <input type="number" placeholder="DR" value="${participant.dr}">
-                            <input type="checkbox" title="Dead" onchange="checkRowStatus(this); saveState()" value="💀" ${participant.dead ? 'checked' : ''}>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="name-conditions">
-                            <div class="name-section">
-                                <input type="text" placeholder="${participant.type.startsWith('NPC-') ? participant.type : 'Name'}" class="name-input" value="${participant.name}" onchange="saveState()">
+                state.participants.forEach(participant => {
+                    const newParticipant = document.createElement('div');
+                    newParticipant.className = 'participant-row';
+                    newParticipant.innerHTML = `
+                        <div class="type-section">
+                            <select onchange="updateRowStyle(this)">
+                                <option value="PC">PC</option>
+                                <option value="NPC-Trivial">NPC-Trivial</option>
+                                <option value="NPC-Standard">NPC-Standard</option>
+                                <option value="NPC-Elite">NPC-Elite</option>
+                                <option value="NPC-Boss">NPC-Boss</option>
+                                <option value="NPC-Nemesis">NPC-Nemesis</option>
+                            </select>
+                            <div class="dr-dead-section">
+                                <input type="number" placeholder="DR" value="${participant.dr || '1'}">
+                                <input type="checkbox" title="Dead" onchange="checkRowStatus(this)" ${participant.dead ? 'checked' : ''}>
                             </div>
-                            <div class="conditions-section"></div>
                         </div>
-                    </div>
-                    <div class="initiative-section">
-                        <input type="number" placeholder="Init" value="${participant.initiative}" onchange="saveState()">
-                        <button class="remove-button" onclick="removeParticipant(this)">-</button>
-                    </div>
-                `;
-                participant、副参入者。 participantList.appendChild(newParticipant);
-                const select = newParticipant.querySelector('select');
-                select.value = participant.type;
-                updateRowStyle(select);
-                const conditionsSection = newParticipant.querySelector('.conditions-section');
-                participant.conditions.forEach((condition, index) => {
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.placeholder = `Condition ${index + 1}`;
-                    input.value = condition;
-                    input.style.width = `calc(100% / ${participant.conditions.length})`;
-                    input.style.minWidth = window.innerWidth <= 600 ? '15px' : '0';
-                    input.style.fontSize = window.innerWidth <= 600 && participant.conditions.length >= 2 ? '0.65em' : '';
-                    input.onchange = saveState;
-                    conditionsSection.appendChild(input);
+                        <div>
+                            <div class="name-conditions">
+                                <div class="name-section">
+                                    <input type="text" placeholder="${participant.type.startsWith('NPC-') ? participant.type : 'Name'}" class="name-input" value="${participant.name || ''}">
+                                </div>
+                                <div class="conditions-section"></div>
+                            </div>
+                        </div>
+                        <div class="initiative-section">
+                            <input type="number" placeholder="Init" value="${participant.initiative || ''}">
+                            <button class="remove-button" onclick="removeParticipant(this)">-</button>
+                        </div>
+                    `;
+                    participantList.appendChild(newParticipant);
+                    const select = newParticipant.querySelector('select');
+                    select.value = participant.type || 'PC';
+                    updateRowStyle(select);
+                    const conditionsSection = newParticipant.querySelector('.conditions-section');
+                    participant.conditions.forEach((condition, index) => {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.placeholder = `Condition ${index + 1}`;
+                        input.value = condition || '';
+                        input.style.width = `calc(100% / ${participant.conditions.length})`;
+                        input.style.minWidth = window.innerWidth <= 600 ? '15px' : '0';
+                        input.style.fontSize = window.innerWidth <= 600 && participant.conditions.length >= 2 ? '0.65em' : '';
+                        conditionsSection.appendChild(input);
+                    });
                 });
-            });
 
-            document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
-            document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
+                document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
+                document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
 
-            if (initiativeTimerRunning) {
-                initiativeInterval = setInterval(updateInitiativeTimer, 100);
+                if (initiativeTimerRunning) {
+                    initiativeInterval = setInterval(updateInitiativeTimer, 100);
+                }
+                if (combatTimerRunning) {
+                    combatInterval = setInterval(updateCombatTimer, 100);
+                }
+
+                updateParticipants();
+                updateActiveTurn();
+                console.log('State loaded successfully');
+            } catch (error) {
+                console.error('Error loading state:', error);
+                updateRowStyle(document.querySelector('.participant-row select'));
             }
-            if (combatTimerRunning) {
-                combatInterval = setInterval(updateCombatTimer, 100);
-            }
-
-            updateParticipants();
-            updateActiveTurn();
         }
 
         function updateConditions(select) {
@@ -469,7 +483,6 @@
             }
             conditionsSection.innerHTML = '';
             const isMobile = window.innerWidth <= 600;
-            const gap = isMobile ? 4 : 10;
             for (let i = 1; i <= numConditions; i++) {
                 const input = document.createElement('input');
                 input.type = 'text';
@@ -477,9 +490,9 @@
                 input.style.width = `calc(100% / ${numConditions})`;
                 input.style.minWidth = isMobile ? '15px' : '0';
                 input.style.fontSize = isMobile && numConditions >= 2 ? '0.65em' : '';
-                input.onchange = saveState;
                 conditionsSection.appendChild(input);
             }
+            saveState();
         }
 
         function updateDR(select) {
@@ -555,24 +568,24 @@
                         <option value="NPC-Nemesis">NPC-Nemesis</option>
                     </select>
                     <div class="dr-dead-section">
-                        <input type="number" placeholder="DR" value="1" onchange="saveState()">
-                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this); saveState()" value="💀">
+                        <input type="number" placeholder="DR" value="1">
+                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)">
                     </div>
                 </div>
                 <div>
                     <div class="name-conditions">
                         <div class="name-section">
-                            <input type="text" placeholder="Name" class="name-input" onchange="saveState()">
+                            <input type="text" placeholder="Name" class="name-input">
                         </div>
                         <div class="conditions-section">
-                            <input type="text" placeholder="Condition 1" onchange="saveState()">
-                            <input type="text" placeholder="Condition 2" onchange="saveState()">
-                            <input type="text" placeholder="Condition 3" onchange="saveState()">
+                            <input type="text" placeholder="Condition 1">
+                            <input type="text" placeholder="Condition 2">
+                            <input type="text" placeholder="Condition 3">
                         </div>
                     </div>
                 </div>
                 <div class="initiative-section">
-                    <input type="number" placeholder="Init" onchange="saveState()">
+                    <input type="number" placeholder="Init">
                     <button class="remove-button" onclick="removeParticipant(this)">-</button>
                 </div>
             `;
