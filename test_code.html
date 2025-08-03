@@ -303,24 +303,24 @@
                         <option value="NPC-Nemesis">NPC-Nemesis</option>
                     </select>
                     <div class="dr-dead-section">
-                        <input type="number" placeholder="DR" value="1">
+                        <input type="number" placeholder="DR" value="1" onchange="saveState()">
                         <input type="checkbox" title="Dead" onchange="checkRowStatus(this)">
                     </div>
                 </div>
                 <div>
                     <div class="name-conditions">
                         <div class="name-section">
-                            <input type="text" placeholder="Name" class="name-input">
+                            <input type="text" placeholder="Name" class="name-input" onchange="saveState()">
                         </div>
                         <div class="conditions-section">
-                            <input type="text" placeholder="Condition 1">
-                            <input type="text" placeholder="Condition 2">
-                            <input type="text" placeholder="Condition 3">
+                            <input type="text" placeholder="Condition 1" onchange="saveState()">
+                            <input type="text" placeholder="Condition 2" onchange="saveState()">
+                            <input type="text" placeholder="Condition 3" onchange="saveState()">
                         </div>
                     </div>
                 </div>
                 <div class="initiative-section">
-                    <input type="number" placeholder="Init">
+                    <input type="number" placeholder="Init" onchange="saveState()">
                     <button class="remove-button" onclick="removeParticipant(this)">-</button>
                 </div>
             </div>
@@ -413,20 +413,20 @@
                                 <option value="NPC-Nemesis">NPC-Nemesis</option>
                             </select>
                             <div class="dr-dead-section">
-                                <input type="number" placeholder="DR" value="${participant.dr || '1'}">
+                                <input type="number" placeholder="DR" value="${participant.dr || '1'}" onchange="saveState()">
                                 <input type="checkbox" title="Dead" onchange="checkRowStatus(this)" ${participant.dead ? 'checked' : ''}>
                             </div>
                         </div>
                         <div>
                             <div class="name-conditions">
                                 <div class="name-section">
-                                    <input type="text" placeholder="${participant.type.startsWith('NPC-') ? participant.type : 'Name'}" class="name-input" value="${participant.name || ''}">
+                                    <input type="text" placeholder="${participant.type.startsWith('NPC-') ? participant.type : 'Name'}" class="name-input" value="${participant.name || ''}" onchange="saveState()">
                                 </div>
                                 <div class="conditions-section"></div>
                             </div>
                         </div>
                         <div class="initiative-section">
-                            <input type="number" placeholder="Init" value="${participant.initiative || ''}">
+                            <input type="number" placeholder="Init" value="${participant.initiative || ''}" onchange="saveState()">
                             <button class="remove-button" onclick="removeParticipant(this)">-</button>
                         </div>
                     `;
@@ -443,6 +443,7 @@
                         input.style.width = `calc(100% / ${participant.conditions.length || 1})`;
                         input.style.minWidth = isMobile ? '15px' : '0';
                         input.style.fontSize = isMobile && participant.conditions.length >= 2 ? '0.65em' : '';
+                        input.onchange = saveState;
                         conditionsSection.appendChild(input);
                     });
                     updateDR(select);
@@ -499,6 +500,7 @@
                 input.style.width = `calc(100% / ${numConditions})`;
                 input.style.minWidth = isMobile ? '15px' : '0';
                 input.style.fontSize = isMobile && numConditions >= 2 ? '0.65em' : '';
+                input.onchange = saveState;
                 conditionsSection.appendChild(input);
             }
             saveState();
@@ -577,24 +579,24 @@
                         <option value="NPC-Nemesis">NPC-Nemesis</option>
                     </select>
                     <div class="dr-dead-section">
-                        <input type="number" placeholder="DR" value="1">
+                        <input type="number" placeholder="DR" value="1" onchange="saveState()">
                         <input type="checkbox" title="Dead" onchange="checkRowStatus(this)">
                     </div>
                 </div>
                 <div>
                     <div class="name-conditions">
                         <div class="name-section">
-                            <input type="text" placeholder="Name" class="name-input">
+                            <input type="text" placeholder="Name" class="name-input" onchange="saveState()">
                         </div>
                         <div class="conditions-section">
-                            <input type="text" placeholder="Condition 1">
-                            <input type="text" placeholder="Condition 2">
-                            <input type="text" placeholder="Condition 3">
+                            <input type="text" placeholder="Condition 1" onchange="saveState()">
+                            <input type="text" placeholder="Condition 2" onchange="saveState()">
+                            <input type="text" placeholder="Condition 3" onchange="saveState()">
                         </div>
                     </div>
                 </div>
                 <div class="initiative-section">
-                    <input type="number" placeholder="Init">
+                    <input type="number" placeholder="Init" onchange="saveState()">
                     <button class="remove-button" onclick="removeParticipant(this)">-</button>
                 </div>
             `;
