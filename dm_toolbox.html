@@ -168,8 +168,8 @@
             box-sizing: border-box;
             max-width: 100%;
         }
-        input[type="number"] {
-            width: 30px;
+        .dr-dead-section input[type="number"] {
+            width: 40px;
         }
         input[type="checkbox"] {
             width: 18px;
@@ -267,7 +267,7 @@
                 font-size: 0.65em;
                 box-sizing: border-box;
             }
-            input[type="number"] {
+            .dr-dead-section input[type="number"] {
                 width: 25px;
             }
             input[type="checkbox"] {
@@ -281,7 +281,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="loadState()">
     <h1>D&D DM TOOLBOX</h1>
 
     <div class="combat-tracker">
@@ -303,24 +303,24 @@
                         <option value="NPC-Nemesis">NPC-Nemesis</option>
                     </select>
                     <div class="dr-dead-section">
-                        <input type="number" placeholder="DR" value="15">
-                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)" value="💀">
+                        <input type="number" placeholder="DR" value="1" onchange="saveState()">
+                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)">
                     </div>
                 </div>
                 <div>
                     <div class="name-conditions">
                         <div class="name-section">
-                            <input type="text" placeholder="Name" class="name-input">
+                            <input type="text" placeholder="Name" class="name-input" onchange="saveState()">
                         </div>
                         <div class="conditions-section">
-                            <input type="text" placeholder="Condition 1">
-                            <input type="text" placeholder="Condition 2">
-                            <input type="text" placeholder="Condition 3">
+                            <input type="text" placeholder="Condition 1" onchange="saveState()">
+                            <input type="text" placeholder="Condition 2" onchange="saveState()">
+                            <input type="text" placeholder="Condition 3" onchange="saveState()">
                         </div>
                     </div>
                 </div>
                 <div class="initiative-section">
-                    <input type="number" placeholder="Init">
+                    <input type="number" placeholder="Init" onchange="saveState()">
                     <button class="remove-button" onclick="removeParticipant(this)">-</button>
                 </div>
             </div>
@@ -358,6 +358,126 @@
         let currentTurnIndex = -1;
         let participants = [];
 
+        function saveState() {
+            try {
+                const rows = Array.from(document.getElementsByClassName('participant-row'));
+                const state = {
+                    participants: rows.map(row => ({
+                        type: row.querySelector('.type-section select').value,
+                        dr: row.querySelector('.dr-dead-section input[type="number"]').value || '1',
+                        dead: row.querySelector('.dr-dead-section input[type="checkbox"]').checked,
+                        name: row.querySelector('.name-input').value || '',
+                        conditions: Array.from(row.querySelectorAll('.conditions-section input')).map(input => input.value || ''),
+                        initiative: row.querySelector('.initiative-section input[type="number"]').value || ''
+                    })),
+                    initiativeTime,
+                    combatTime,
+                    initiativeTimerRunning,
+                    combatTimerRunning,
+                    currentTurnIndex
+                };
+                localStorage.setItem('combatTrackerState', JSON.stringify(state));
+            } catch (error) {
+                console.error('Error saving state:', error);
+            }
+        }
+
+        function loadState() {
+            try {
+                const state = JSON.parse(localStorage.getItem('combatTrackerState'));
+                if (!state || !state.participants) {
+                    updateRowStyle(document.querySelector('.participant-row select'));
+                    return;
+                }
+
+                initiativeTime = state.initiativeTime || 0;
+                combatTime = state.combatTime || 5 * 60 * 1000;
+                initiativeTimerRunning = state.initiativeTimerRunning || false;
+                combatTimerRunning = state.combatTimerRunning || false;
+                currentTurnIndex = state.currentTurnIndex || -1;
+
+                const participantList = document.getElementById('participant-list');
+                participantList.innerHTML = '';
+
+                state.participants.forEach(participant => {
+                    const newParticipant = document.createElement('div');
+                    newParticipant.className = 'participant-row';
+                    newParticipant.innerHTML = `
+                        <div class="type-section">
+                            <select onchange="updateRowStyle(this)">
+                                <option value="PC">PC</option>
+                                <option value="NPC-Trivial">NPC-Trivial</option>
+                                <option value="NPC-Standard">NPC-Standard</option>
+                                <option value="NPC-Elite">NPC-Elite</option>
+                                <option value="NPC-Boss">NPC-Boss</option>
+                                <option value="NPC-Nemesis">NPC-Nemesis</option>
+                            </select>
+                            <div class="dr-dead-section">
+                                <input type="number" placeholder="DR" value="${participant.dr || '1'}" onchange="saveState()">
+                                <input type="checkbox" title="Dead" onchange="checkRowStatus(this)" ${participant.dead ? 'checked' : ''}>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="name-conditions">
+                                <div class="name-section">
+                                    <input type="text" placeholder="${participant.type.startsWith('NPC-') ? participant.type : 'Name'}" class="name-input" value="${participant.name || ''}" onchange="saveState()">
+                                </div>
+                                <div class="conditions-section"></div>
+                            </div>
+                        </div>
+                        <div class="initiative-section">
+                            <input type="number" placeholder="Init" value="${participant.initiative || ''}" onchange="saveState()">
+                            <button class="remove-button" onclick="removeParticipant(this)">-</button>
+                        </div>
+                    `;
+                    participantList.appendChild(newParticipant);
+                    const select = newParticipant.querySelector('select');
+                    select.value = participant.type || 'PC';
+                    const conditionsSection = newParticipant.querySelector('.conditions-section');
+                    const isMobile = window.innerWidth <= 600;
+                    participant.conditions.forEach((condition, index) => {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.placeholder = `Condition ${index + 1}`;
+                        input.value = condition || '';
+                        input.style.width = `calc(100% / ${participant.conditions.length || 1})`;
+                        input.style.minWidth = isMobile ? '15px' : '0';
+                        input.style.fontSize = isMobile && participant.conditions.length >= 2 ? '0.65em' : '';
+                        input.onchange = saveState;
+                        conditionsSection.appendChild(input);
+                    });
+                    updateDR(select);
+                    checkRowStatus(select);
+                    if (participant.dead) {
+                        newParticipant.classList.add('dead-row');
+                    }
+                    switch (participant.type) {
+                        case 'NPC-Trivial': newParticipant.classList.add('npc-trivial'); break;
+                        case 'NPC-Standard': newParticipant.classList.add('npc-standard'); break;
+                        case 'NPC-Elite': newParticipant.classList.add('npc-elite'); break;
+                        case 'NPC-Boss': newParticipant.classList.add('npc-boss'); break;
+                        case 'NPC-Nemesis': newParticipant.classList.add('npc-nemesis'); break;
+                    }
+                });
+
+                document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
+                document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
+
+                if (initiativeTimerRunning) {
+                    initiativeInterval = setInterval(updateInitiativeTimer, 100);
+                }
+                if (combatTimerRunning) {
+                    combatInterval = setInterval(updateCombatTimer, 100);
+                }
+
+                updateParticipants();
+                updateActiveTurn();
+            } catch (error) {
+                console.error('Error loading state:', error);
+                updateRowStyle(document.querySelector('.participant-row select'));
+            }
+        }
+
         function updateConditions(select) {
             const row = select.closest('.participant-row');
             const conditionsSection = row.querySelector('.conditions-section');
@@ -373,7 +493,6 @@
             }
             conditionsSection.innerHTML = '';
             const isMobile = window.innerWidth <= 600;
-            const gap = isMobile ? 4 : 10;
             for (let i = 1; i <= numConditions; i++) {
                 const input = document.createElement('input');
                 input.type = 'text';
@@ -381,8 +500,41 @@
                 input.style.width = `calc(100% / ${numConditions})`;
                 input.style.minWidth = isMobile ? '15px' : '0';
                 input.style.fontSize = isMobile && numConditions >= 2 ? '0.65em' : '';
+                input.onchange = saveState;
                 conditionsSection.appendChild(input);
             }
+            saveState();
+        }
+
+        function updateDR(select) {
+            const row = select.closest('.participant-row');
+            const drInput = row.querySelector('.dr-dead-section input[type="number"]');
+            const type = select.value;
+            let defaultDR;
+            switch (type) {
+                case 'PC': defaultDR = 1; break;
+                case 'NPC-Trivial': defaultDR = 10; break;
+                case 'NPC-Standard': defaultDR = 12; break;
+                case 'NPC-Elite': defaultDR = 14; break;
+                case 'NPC-Boss': defaultDR = 16; break;
+                case 'NPC-Nemesis': defaultDR = 18; break;
+            }
+            drInput.value = defaultDR;
+            saveState();
+        }
+
+        function updateName(select) {
+            const row = select.closest('.participant-row');
+            const nameInput = row.querySelector('.name-input');
+            const type = select.value;
+            if (type.startsWith('NPC-')) {
+                nameInput.value = type;
+                nameInput.placeholder = type;
+            } else {
+                nameInput.value = '';
+                nameInput.placeholder = 'Name';
+            }
+            saveState();
         }
 
         function updateRowStyle(select) {
@@ -397,6 +549,8 @@
                 case 'PC': break;
             }
             updateConditions(select);
+            updateDR(select);
+            updateName(select);
             checkRowStatus(select);
         }
 
@@ -407,6 +561,7 @@
             if (deadCheckbox && deadCheckbox.checked) {
                 row.classList.add('dead-row');
             }
+            saveState();
         }
 
         function addParticipant() {
@@ -424,30 +579,31 @@
                         <option value="NPC-Nemesis">NPC-Nemesis</option>
                     </select>
                     <div class="dr-dead-section">
-                        <input type="number" placeholder="DR" value="15">
-                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)" value="💀">
+                        <input type="number" placeholder="DR" value="1" onchange="saveState()">
+                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)">
                     </div>
                 </div>
                 <div>
                     <div class="name-conditions">
                         <div class="name-section">
-                            <input type="text" placeholder="Name" class="name-input">
+                            <input type="text" placeholder="Name" class="name-input" onchange="saveState()">
                         </div>
                         <div class="conditions-section">
-                            <input type="text" placeholder="Condition 1">
-                            <input type="text" placeholder="Condition 2">
-                            <input type="text" placeholder="Condition 3">
+                            <input type="text" placeholder="Condition 1" onchange="saveState()">
+                            <input type="text" placeholder="Condition 2" onchange="saveState()">
+                            <input type="text" placeholder="Condition 3" onchange="saveState()">
                         </div>
                     </div>
                 </div>
                 <div class="initiative-section">
-                    <input type="number" placeholder="Init">
+                    <input type="number" placeholder="Init" onchange="saveState()">
                     <button class="remove-button" onclick="removeParticipant(this)">-</button>
                 </div>
             `;
             participantList.appendChild(newParticipant);
             updateRowStyle(newParticipant.querySelector('select'));
             updateParticipants();
+            saveState();
         }
 
         function removeParticipant(button) {
@@ -462,6 +618,7 @@
                 currentTurnIndex = -1;
             }
             updateActiveTurn();
+            saveState();
         }
 
         function sortParticipants() {
@@ -479,13 +636,13 @@
             participantList.innerHTML = '';
             sortedRows.forEach(row => participantList.appendChild(row));
             updateParticipants();
-
             if (activeIndex >= 0 && participants.length > 0) {
                 currentTurnIndex = Math.min(activeIndex, participants.length - 1);
             } else if (participants.length === 0) {
                 currentTurnIndex = -1;
             }
             updateActiveTurn();
+            saveState();
         }
 
         function updateParticipants() {
@@ -493,6 +650,7 @@
                 name: row.querySelector('.name-input').value || 'Unnamed',
                 initiative: parseInt(row.querySelector('.initiative-section input[type="number"]').value) || 0
             }));
+            saveState();
         }
 
         function updateActiveTurn() {
@@ -504,6 +662,7 @@
             } else {
                 document.getElementById('active-turn').textContent = 'NO ACTIVE TURN';
             }
+            saveState();
         }
 
         function formatTime(ms) {
@@ -525,6 +684,7 @@
             if (initiativeTimerRunning) {
                 initiativeTime += 100;
                 document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
+                saveState();
             }
         }
 
@@ -532,6 +692,7 @@
             if (combatTimerRunning && combatTime > 0) {
                 combatTime -= 100;
                 document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
+                saveState();
             }
         }
 
@@ -543,6 +704,7 @@
                 clearInterval(initiativeInterval);
                 initiativeInterval = null;
             }
+            saveState();
         }
 
         function resetInitiativeTimer() {
@@ -551,6 +713,7 @@
             initiativeInterval = null;
             initiativeTime = 0;
             document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
+            saveState();
         }
 
         function toggleCombatTimer() {
@@ -561,6 +724,7 @@
                 clearInterval(combatInterval);
                 combatInterval = null;
             }
+            saveState();
         }
 
         function resetCombatTimer() {
@@ -569,6 +733,7 @@
             combatInterval = null;
             combatTime = 5 * 60 * 1000;
             document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
+            saveState();
         }
 
         function startCombat() {
@@ -577,6 +742,7 @@
                 currentTurnIndex = 0;
                 updateActiveTurn();
             }
+            saveState();
         }
 
         function previousTurn() {
@@ -584,6 +750,7 @@
                 currentTurnIndex = (currentTurnIndex - 1 + participants.length) % participants.length;
                 updateActiveTurn();
             }
+            saveState();
         }
 
         function nextTurn() {
@@ -591,6 +758,7 @@
                 currentTurnIndex = (currentTurnIndex + 1) % participants.length;
                 updateActiveTurn();
             }
+            saveState();
         }
 
         function endCombat() {
@@ -598,6 +766,7 @@
             updateActiveTurn();
             resetInitiativeTimer();
             resetCombatTimer();
+            saveState();
         }
     </script>
 </body>
