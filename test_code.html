@@ -2,772 +2,961 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D&D DM Toolbox</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SIMPLE D&D CHARACTER SHEET</title>
     <style>
-        :root {
-            --type-width: 60px;
-            --initiative-width: 45px;
+        * {
+            box-sizing: border-box;
         }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #e6e6fa;
-            color: #333;
-            margin: 10px;
-            overflow-x: hidden;
-        }
-        h1, h2 {
-            color: #4b0082;
-        }
-        .combat-tracker, .time-tracker, .combat-controls {
-            background-color: #f0f0ff;
-            border: 1px solid #9370db;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 8px;
+            font-family: 'Georgia', serif;
             max-width: 100%;
-            box-sizing: border-box;
+            margin: 10px auto;
+            padding: 10px;
+            background-color: #FDF5E6; /* Parchment-like background */
+            background-image: url('https://www.transparenttextures.com/patterns/paper.png');
+            color: #333;
+            text-transform: uppercase !important;
         }
-        .participant-row {
-            display: grid;
-            grid-template-columns: var(--type-width) 1fr var(--initiative-width);
-            align-items: center;
-            padding: 5px;
-            border-bottom: 1px solid #d8bfd8;
-            width: 100%;
-            max-width: calc(100vw - 20px);
-            box-sizing: border-box;
-            overflow-x: hidden;
+        .section {
+            margin: 10px;
+            background-color: #FDF5E6; /* Light parchment */
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #8B4513; /* Stone-like brown */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
-        .participant-row > div, .participant-row > select {
-            border-right: 1px solid #d8bfd8;
-            padding-right: 3px;
-            box-sizing: border-box;
+        h1, h2, h3 {
+            font-family: 'Times New Roman', serif;
+            color: #4B2E0B; /* Dark brown */
+            margin-top: 0;
         }
-        .participant-row > div:nth-child(2) {
-            padding-right: 0;
+        h1 {
+            text-align: center;
+            font-size: 24px;
         }
-        .participant-row > div:last-child {
-            border-right: none;
-            padding-right: 0;
+        h2 {
+            font-size: 18px;
+        }
+        h3 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .section-header {
+            margin-bottom: 10px;
+        }
+        .section-footer {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            max-width: var(--initiative-width);
-            min-width: 0;
-        }
-        .participant-header {
-            display: grid;
-            grid-template-columns: var(--type-width) 1fr var(--initiative-width);
-            font-weight: bold;
-            padding: 5px;
-            background-color: #d8bfd8;
-            width: 100%;
-            max-width: calc(100vw - 20px);
-            box-sizing: border-box;
-            overflow-x: hidden;
-        }
-        .participant-header > div {
-            border-right: 1px solid #9370db;
-            padding-right: 3px;
-            box-sizing: border-box;
-        }
-        .participant-header > div:nth-child(2) {
-            padding-right: 0;
-        }
-        .participant-header > div:last-child {
-            border-right: none;
-            padding-right: 0;
-            display: flex;
-            align-items: center;
             justify-content: flex-end;
-            max-width: var(--initiative-width);
-            min-width: 0;
+            margin-top: 10px;
         }
-        .sort-button {
-            background-color: #6a5acd;
+        .info-toggle {
+            background-color: #8B4513;
             color: white;
             border: none;
-            padding: 3px 8px;
+            border-radius: 3px;
+            padding: 2px 6px;
             cursor: pointer;
-            border-radius: 4px;
+            font-size: 10px;
+            text-transform: uppercase;
+            font-family: 'Georgia', serif;
+            touch-action: manipulation;
+            min-width: 24px;
+            min-height: 24px;
+            position: relative;
+            z-index: 1;
         }
-        .sort-button:hover {
-            background-color: #483d8b;
+        .info-toggle:hover {
+            background-color: #A0522D;
         }
-        .type-section {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            align-items: center;
+        .info-content {
+            display: none;
+            background-color: #FDF5E6;
+            border: 1px solid #8B4513;
+            padding: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #4B2E0B;
+            line-height: 1.4;
+            text-transform: none !important;
         }
-        .dr-dead-section {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 3px;
+        input[type="text"], input[type="number"] {
             width: 100%;
-            justify-content: center;
-            max-width: 100%;
-            box-sizing: border-box;
+            padding: 4px;
+            border: 1px solid #8B4513;
+            border-radius: 3px;
+            text-transform: uppercase;
+            font-family: 'Georgia', serif;
         }
-        .name-conditions {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            width: 100%;
-            max-width: 100%;
-            box-sizing: border-box;
-            overflow: hidden;
+        input::placeholder {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #666;
         }
-        .name-section {
-            display: block;
-            width: 100%;
-            max-width: 100%;
-            box-sizing: border-box;
-        }
-        .name-section input {
-            width: 100%;
-            max-width: 100%;
-            min-width: 0;
-            margin: 0;
-            flex-shrink: 1;
-            box-sizing: border-box;
-        }
-        .conditions-section {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            max-width: 100%;
-            box-sizing: border-box;
-            flex-wrap: nowrap;
-            overflow: hidden;
-        }
-        .conditions-section input {
-            flex: 1 1 0;
-            margin: 0;
-            height: 18px;
-            min-width: 15px;
-            box-sizing: border-box;
-        }
-        .initiative-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            flex-shrink: 0;
-            min-width: 0;
-        }
-        select, input[type="text"], input[type="number"], input[type="checkbox"] {
-            background-color: #ffffff;
-            color: #000000;
-            border: 1px solid #483d8b;
-            padding: 3px;
-            border-radius: 4px;
-            box-sizing: border-box;
-            max-width: 100%;
-        }
-        .dr-dead-section input[type="number"] {
-            width: 40px;
-        }
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+        input[type="number"] {
+            width: 60px;
+            display: inline-block;
         }
         button {
-            background-color: #6a5acd;
+            background-color: #8B4513; /* Leather brown */
             color: white;
             border: none;
-            padding: 3px;
-            border-radius: 4px;
+            border-radius: 3px;
+            padding: 4px 8px;
             cursor: pointer;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-family: 'Georgia', serif;
+            touch-action: manipulation;
+            min-width: 24px;
+            min-height: 24px;
+            position: relative;
+            z-index: 1;
+        }
+        button:hover {
+            background-color: #A0522D; /* Lighter leather */
         }
         .remove-button {
-            padding: 2px 6px;
-            font-size: 12px;
-            width: 20px;
+            background-color: #A52A2A; /* Red-tinted leather */
         }
-        button:hover, select:hover, input:hover {
-            background-color: #483d8b;
+        .remove-button:hover {
+            background-color: #8B0000;
         }
-        .add-participant, .combat-control-btn, .time-control-btn {
-            background-color: #6a5acd;
+        .character-name {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .character-name input {
+            width: 150px;
+        }
+        .character-name span {
+            font-size: 14px;
+            color: #4B2E0B;
+        }
+        .identity-section, .gear-section, .abilities-section, .conditions-section {
+            margin-bottom: 15px;
+        }
+        .identity-section div, .gear-section, .abilities-section, .conditions-section {
+            margin-bottom: 10px;
+        }
+        .item {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .item input[type="text"] {
+            flex-grow: 1;
+        }
+        .hp-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .hp-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .dice-roller {
+            margin-bottom: 15px;
+        }
+        .d20-decagon {
+            background-color: #8B4513;
             color: white;
             border: none;
-            padding: 6px 12px;
-            margin: 3px;
-            border-radius: 4px;
+            border-radius: 3px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            font-size: 16px;
+            text-transform: uppercase;
+            clip-path: polygon(50% 0%, 79% 9%, 94% 35%, 94% 65%, 79% 91%, 50% 100%, 21% 91%, 6% 65%, 6% 35%, 21% 9%);
+            touch-action: manipulation;
+            min-width: 50px;
+            min-height: 50px;
+            position: relative;
+            z-index: 1;
         }
-        .add-participant:hover, .combat-control-btn:hover, .time-control-btn:hover {
-            background-color: #483d8b;
+        .d20-decagon:hover {
+            background-color: #A0522D;
         }
-        .time-display {
-            font-size: 1.2em;
-            color: #4b0082;
-            margin: 5px 0;
+        .dice-result {
+            font-size: 14px;
+            color: #4B2E0B;
+            margin-top: 5px;
         }
-        .npc-trivial {
-            background-color: #b3e5fc;
+        .notes textarea {
+            width: 100%;
+            height: 100px;
+            padding: 4px;
+            border: 1px solid #8B4513;
+            border-radius: 3px;
+            text-transform: uppercase;
+            font-family: 'Georgia', serif;
         }
-        .npc-standard {
-            background-color: #ffe6e6;
+        .notes-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
         }
-        .npc-elite {
-            background-color: #ffcc99;
+        .notes-footer-right {
+            display: flex;
+            gap: 5px;
+            float: right;
         }
-        .npc-boss {
-            background-color: #ff9999;
+        .clear {
+            clear: both;
         }
-        .npc-nemesis {
-            background-color: #cc66cc;
-        }
-        .dead-row {
-            background-color: #d3d3d3;
-        }
-        .active-turn {
-            border: 3px solid #ffff00;
-        }
-        @media (max-width: 600px) {
-            :root {
-                --type-width: 50px;
-                --initiative-width: 50px;
+        @media screen and (max-width: 600px) {
+            body {
+                padding: 5px;
             }
-            .participant-row, .participant-header {
-                grid-template-columns: var(--type-width) 1fr var(--initiative-width);
-                max-width: calc(100vw - 20px);
-                overflow-x: hidden;
+            .section {
+                padding: 10px;
+                margin: 5px;
             }
-            .participant-row > div:last-child, .participant-header > div:last-child {
-                max-width: var(--initiative-width);
+            input[type="text"], input[type="number"] {
+                padding: 3px;
+                font-size: 12px;
             }
-            .name-conditions {
-                max-width: calc(100vw - 70px);
-                box-sizing: border-box;
-                overflow: hidden;
+            input::placeholder {
+                font-size: 8px;
             }
-            .name-section input {
-                width: 100%;
-                max-width: calc(100vw - 70px);
-                min-width: 0;
-                box-sizing: border-box;
+            input[type="number"] {
+                width: 40px;
             }
-            .conditions-section {
-                flex-wrap: nowrap;
-                gap: 4px;
-                max-width: calc(100vw - 70px);
-                box-sizing: border-box;
-                overflow: hidden;
+            .character-name input {
+                width: 120px;
             }
-            .conditions-section input {
-                flex: 1 1 0;
-                width: calc(100% / 4);
-                min-width: 15px;
-                font-size: 0.65em;
-                box-sizing: border-box;
+            .hp-section {
+                gap: 10px;
             }
-            .dr-dead-section input[type="number"] {
-                width: 25px;
+            .d20-decagon {
+                width: 50px;
+                height: 50px;
+                font-size: 14px;
             }
-            input[type="checkbox"] {
-                width: 16px;
-                height: 16px;
+            button {
+                padding: 3px 6px;
+                font-size: 10px;
             }
-            .sort-button, .remove-button {
-                padding: 2px 5px;
-                font-size: 0.75em;
+            .info-toggle {
+                padding: 3px 6px;
+                font-size: 8px;
+            }
+            .info-content {
+                font-size: 10px;
+            }
+            .dice-result, .character-name span {
+                font-size: 12px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            h2 {
+                font-size: 16px;
+            }
+            h3 {
+                font-size: 12px;
+            }
+            .notes textarea {
+                height: 80px;
             }
         }
     </style>
 </head>
-<body onload="loadState()">
-    <h1>D&D DM TOOLBOX</h1>
+<body>
+    <h1>SIMPLE D&D CHARACTER SHEET</h1>
 
-    <div class="combat-tracker">
-        <h2>COMBAT TRACKER</h2>
-        <div class="participant-header">
-            <div>Type</div>
-            <div>Name</div>
-            <div><button class="sort-button" onclick="sortParticipants()">Sort</button></div>
+    <div class="section character-info">
+        <div class="section-header">
+            <h2>CHARACTER</h2>
         </div>
-        <div id="participant-list">
-            <div class="participant-row">
-                <div class="type-section">
-                    <select onchange="updateRowStyle(this)">
-                        <option value="PC">PC</option>
-                        <option value="NPC-Trivial">NPC-Trivial</option>
-                        <option value="NPC-Standard">NPC-Standard</option>
-                        <option value="NPC-Elite">NPC-Elite</option>
-                        <option value="NPC-Boss">NPC-Boss</option>
-                        <option value="NPC-Nemesis">NPC-Nemesis</option>
-                    </select>
-                    <div class="dr-dead-section">
-                        <input type="number" placeholder="DR" value="1" onchange="saveState()">
-                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)">
-                    </div>
-                </div>
-                <div>
-                    <div class="name-conditions">
-                        <div class="name-section">
-                            <input type="text" placeholder="Name" class="name-input" onchange="saveState()">
-                        </div>
-                        <div class="conditions-section">
-                            <input type="text" placeholder="Condition 1" onchange="saveState()">
-                            <input type="text" placeholder="Condition 2" onchange="saveState()">
-                            <input type="text" placeholder="Condition 3" onchange="saveState()">
-                        </div>
-                    </div>
-                </div>
-                <div class="initiative-section">
-                    <input type="number" placeholder="Init" onchange="saveState()">
-                    <button class="remove-button" onclick="removeParticipant(this)">-</button>
-                </div>
+        <div class="character-name">
+            <input type="text" id="name" placeholder="NAME" onchange="saveCharacter()">
+            <span>THE</span>
+            <input type="text" id="concept" placeholder="CHARACTER CONCEPT" onchange="saveCharacter()">
+        </div>
+        <div class="info-content" id="character-info-info">
+            Your character’s name and concept define their identity. Example: “Zavolorn the Healer” describes a healer named Zavolorn. Enter a name and a short description of their role or personality.
+        </div>
+        <div class="section-footer">
+            <button class="info-toggle" id="info-character-info">INFO</button>
+        </div>
+    </div>
+
+    <div class="section identity">
+        <div class="section-header">
+            <h2>IDENTITY</h2>
+        </div>
+        <div class="identity-section traits">
+            <h3>TRAITS</h3>
+            <div class="item" data-index="0">
+                <input type="text" id="trait-0" placeholder="TRAIT" onchange="saveCharacter()">
+                <button class="remove-button" id="remove-trait-0">-</button>
             </div>
+            <button class="add-button" id="add-trait">+ ADD TRAIT</button>
         </div>
-        <button class="add-participant" onclick="addParticipant()">+ ADD PARTICIPANT</button>
+        <div class="identity-section flaws">
+            <h3>FLAWS</h3>
+            <div class="item" data-index="0">
+                <input type="text" id="flaw-0" placeholder="FLAW" onchange="saveCharacter()">
+                <button class="remove-button" id="remove-flaw-0">-</button>
+            </div>
+            <button class="add-button" id="add-flaw">+ ADD FLAW</button>
+        </div>
+        <div class="identity-section aspirations">
+            <h3>ASPIRATIONS</h3>
+            <div class="item" data-index="0">
+                <input type="text" id="aspiration-0" placeholder="ASPIRATION" onchange="saveCharacter()">
+                <button class="remove-button" id="remove-aspiration-0">-</button>
+            </div>
+            <button class="add-button" id="add-aspiration">+ ADD ASPIRATION</button>
+        </div>
+        <div class="info-content" id="identity-info">
+            Traits, flaws, and aspirations shape your character’s personality and goals. Traits are positive qualities (e.g., “brave”), flaws are weaknesses (e.g., “impulsive”), and aspirations are goals (e.g., “save village”). Add at least one of each.
+        </div>
+        <div class="section-footer">
+            <button class="info-toggle" id="info-identity">INFO</button>
+        </div>
     </div>
 
-    <div class="combat-controls">
-        <h2 id="active-turn">NO ACTIVE TURN</h2>
-        <button class="combat-control-btn" onclick="startCombat()">START COMBAT</button>
-        <button class="combat-control-btn" onclick="previousTurn()">PREVIOUS</button>
-        <button class="combat-control-btn" onclick="nextTurn()">NEXT</button>
-        <button class="combat-control-btn" onclick="endCombat()">END COMBAT</button>
+    <div class="section hp">
+        <div class="section-header">
+            <h2>CONDITIONS</h2>
+        </div>
+        <div class="conditions-section">
+            <div class="item" data-index="0">
+                <input type="text" id="condition-0" placeholder="CONDITION" onchange="saveCharacter()">
+                <button class="remove-button" id="remove-condition-0">-</button>
+            </div>
+            <button class="add-button" id="add-condition">+ ADD CONDITION</button>
+        </div>
+        <div class="info-content" id="hp-info">
+            You track Conditions — depicting narrative harm.<br><br>
+            ❌ Conditions (dynamic slots)<br>
+            Represent lasting harm: injury, fatigue, fear, corruption, exposure, etc.<br>
+            Take a Condition when an enemy or narrative failure warrants lasting consequences.<br><br>
+            Examples: “Burned,” “Disoriented,” “Possessed,” “Shattered Hand,” “Hunted”<br><br>
+            🧠 At 3 Conditions, if you are harmed again - you’re out of action (broken, dead, fled, or transformed).
+        </div>
+        <div class="section-footer">
+            <button class="info-toggle" id="info-hp">INFO</button>
+        </div>
     </div>
 
-    <div class="time-tracker">
-        <h2>TIME & INITIATIVE TRACKER</h2>
-        <div class="time-display" id="initiative-timer">00:00.0</div>
-        <button class="time-control-btn" onclick="toggleInitiativeTimer()">PAUSE/RESUME</button>
-        <button class="time-control-btn" onclick="resetInitiativeTimer()">RESET</button>
+    <div class="section gear">
+        <div class="section-header">
+            <h2>GEAR</h2>
+        </div>
+        <div class="gear-section">
+            <div class="item" data-index="0">
+                <input type="text" id="gear-0" placeholder="WEAPON/TOOL/ITEM" onchange="saveCharacter()">
+                <button class="remove-button" id="remove-gear-0">-</button>
+            </div>
+            <button class="add-button" id="add-gear">+ ADD GEAR</button>
+        </div>
+        <div class="info-content" id="gear-info">
+            Gear includes your character’s weapons, tools, or items (e.g., “sword,” “shield”). Add items you carry or use in adventures.
+        </div>
+        <div class="section-footer">
+            <button class="info-toggle" id="info-gear">INFO</button>
+        </div>
     </div>
 
-    <div class="time-tracker">
-        <div class="time-display" id="combat-timer">05:00</div>
-        <button class="time-control-btn" onclick="toggleCombatTimer()">START/PAUSE</button>
-        <button class="time-control-btn" onclick="resetCombatTimer()">RESET</button>
+    <div class="section abilities">
+        <div class="section-header">
+            <h2>ABILITIES/FEATS</h2>
+        </div>
+        <div class="abilities-section">
+            <div class="item" data-index="0">
+                <input type="text" id="ability-0" placeholder="SPELL/ABILITY/FEATURE/SKILL" onchange="saveCharacter()">
+                <button class="remove-button" id="remove-ability-0">-</button>
+            </div>
+            <button class="add-button" id="add-ability">+ ADD ABILITY</button>
+        </div>
+        <div class="info-content" id="abilities-info">
+            Abilities/feats list your character’s spells, skills, or special abilities (e.g., “fireball,” “dodge”). Add at least one to define what your character can do.
+        </div>
+        <div class="section-footer">
+            <button class="info-toggle" id="info-abilities">INFO</button>
+        </div>
+    </div>
+
+    <div class="section dice-roller">
+        <div class="section-header">
+            <h2>DICE ROLLER (D20)</h2>
+        </div>
+        <button class="d20-decagon" id="d20-result">ROLL</button>
+        <div class="dice-result" id="dice-message"></div>
+        <div class="info-content" id="dice-roller-info">
+            Roll a 20-sided die (d20) to determine the success of actions. Click the decagon to roll. A 1 is a “dire failure” (guaranteed bad outcome), and a 20 is a “great success” (guaranteed excellent outcome).
+        </div>
+        <div class="section-footer">
+            <button class="info-toggle" id="info-dice-roller">INFO</button>
+        </div>
+    </div>
+
+    <div class="section notes">
+        <div class="section-header">
+            <h2>NOTES</h2>
+        </div>
+        <textarea id="notes" placeholder="ENTER NOTES HERE" onchange="saveCharacter()"></textarea>
+        <div class="notes-footer">
+            <button id="save-notes">SAVE NOTES</button>
+            <div class="notes-footer-right">
+                <button id="export-character">EXPORT CHARACTER</button>
+                <label for="import-file" style="display: inline-block;">
+                    <button id="import-character">IMPORT CHARACTER</button>
+                </label>
+                <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importCharacter(event)">
+            </div>
+            <div class="clear"></div>
+        </div>
+        <div class="info-content" id="notes-info">
+            Use notes to record extra details, campaign events, or character backstory. Save notes to store them, and use export/import to save or load your entire character.
+        </div>
+        <div class="section-footer">
+            <button class="info-toggle" id="info-notes">INFO</button>
+        </div>
     </div>
 
     <script>
-        let initiativeTime = 0;
-        let combatTime = 5 * 60 * 1000;
-        let initiativeTimerRunning = false;
-        let combatTimerRunning = false;
-        let initiativeInterval, combatInterval;
-        let currentTurnIndex = -1;
-        let participants = [];
+        let traitCount = 1;
+        let flawCount = 1;
+        let aspirationCount = 1;
+        let gearCount = 1;
+        let abilityCount = 1;
+        let conditionCount = 1;
 
-        function saveState() {
+        // Helper function to add click and touchstart events
+        function addEvent(element, handler, id) {
+            if (!element) {
+                console.error(`Element not found for ${id}`);
+                return;
+            }
+            // Prevent duplicate events
+            element.removeEventListener('click', handler);
+            element.removeEventListener('touchstart', handler);
+            element.addEventListener('click', (e) => {
+                e.preventDefault();
+                handler(e);
+                console.log(`${id} clicked`);
+            });
+            element.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handler(e);
+                console.log(`${id} touched`);
+            });
+        }
+
+        function toggleInfo(sectionId) {
             try {
-                const rows = Array.from(document.getElementsByClassName('participant-row'));
-                const state = {
-                    participants: rows.map(row => ({
-                        type: row.querySelector('.type-section select').value,
-                        dr: row.querySelector('.dr-dead-section input[type="number"]').value || '1',
-                        dead: row.querySelector('.dr-dead-section input[type="checkbox"]').checked,
-                        name: row.querySelector('.name-input').value || '',
-                        conditions: Array.from(row.querySelectorAll('.conditions-section input')).map(input => input.value || ''),
-                        initiative: row.querySelector('.initiative-section input[type="number"]').value || ''
-                    })),
-                    initiativeTime,
-                    combatTime,
-                    initiativeTimerRunning,
-                    combatTimerRunning,
-                    currentTurnIndex
-                };
-                localStorage.setItem('combatTrackerState', JSON.stringify(state));
-            } catch (error) {
-                console.error('Error saving state:', error);
+                const info = document.getElementById(`${sectionId}-info`);
+                if (!info) throw new Error(`Info content not found for ${sectionId}`);
+                info.style.display = info.style.display === 'block' ? 'none' : 'block';
+                console.log(`Toggled info for ${sectionId}`);
+            } catch (err) {
+                console.error(`Error in toggleInfo for ${sectionId}:`, err);
             }
         }
 
-        function loadState() {
+        function updateCharacterName() {
             try {
-                const state = JSON.parse(localStorage.getItem('combatTrackerState'));
-                if (!state || !state.participants) {
-                    updateRowStyle(document.querySelector('.participant-row select'));
+                const name = document.getElementById('name').value;
+                const concept = document.getElementById('concept').value;
+                saveCharacter();
+                console.log('Character name updated');
+            } catch (err) {
+                console.error('Error in updateCharacterName:', err);
+            }
+        }
+
+        function addTrait() {
+            try {
+                const container = document.querySelector('.traits');
+                if (!container) throw new Error('Traits container not found');
+                const addButton = container.querySelector('.add-button');
+                if (!addButton) throw new Error('Add Trait button not found');
+                const index = traitCount++;
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.setAttribute('data-index', index);
+                item.innerHTML = `
+                    <input type="text" id="trait-${index}" placeholder="TRAIT" onchange="saveCharacter()">
+                    <button class="remove-button" id="remove-trait-${index}">-</button>
+                `;
+                container.insertBefore(item, addButton);
+                updateRemoveButtons('trait');
+                addEvent(document.getElementById(`remove-trait-${index}`), () => removeTrait(index), `remove-trait-${index}`);
+                saveCharacter();
+                console.log(`Added trait-${index}`);
+            } catch (err) {
+                console.error('Error in addTrait:', err);
+            }
+        }
+
+        function removeTrait(index) {
+            try {
+                if (traitCount <= 1) {
+                    console.log('Cannot remove last trait; minimum one required');
+                    return;
+                }
+                const item = document.querySelector(`.traits .item[data-index="${index}"]`);
+                if (!item) throw new Error(`Trait item ${index} not found`);
+                item.remove();
+                traitCount--;
+                updateRemoveButtons('trait');
+                saveCharacter();
+                console.log(`Removed trait-${index}`);
+            } catch (err) {
+                console.error('Error in removeTrait:', err);
+            }
+        }
+
+        function addFlaw() {
+            try {
+                const container = document.querySelector('.flaws');
+                if (!container) throw new Error('Flaws container not found');
+                const addButton = container.querySelector('.add-button');
+                if (!addButton) throw new Error('Add Flaw button not found');
+                const index = flawCount++;
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.setAttribute('data-index', index);
+                item.innerHTML = `
+                    <input type="text" id="flaw-${index}" placeholder="FLAW" onchange="saveCharacter()">
+                    <button class="remove-button" id="remove-flaw-${index}">-</button>
+                `;
+                container.insertBefore(item, addButton);
+                updateRemoveButtons('flaw');
+                addEvent(document.getElementById(`remove-flaw-${index}`), () => removeFlaw(index), `remove-flaw-${index}`);
+                saveCharacter();
+                console.log(`Added flaw-${index}`);
+            } catch (err) {
+                console.error('Error in addFlaw:', err);
+            }
+        }
+
+        function removeFlaw(index) {
+            try {
+                if (flawCount <= 1) {
+                    console.log('Cannot remove last flaw; minimum one required');
+                    return;
+                }
+                const item = document.querySelector(`.flaws .item[data-index="${index}"]`);
+                if (!item) throw new Error(`Flaw item ${index} not found`);
+                item.remove();
+                flawCount--;
+                updateRemoveButtons('flaw');
+                saveCharacter();
+                console.log(`Removed flaw-${index}`);
+            } catch (err) {
+                console.error('Error in removeFlaw:', err);
+            }
+        }
+
+        function addAspiration() {
+            try {
+                const container = document.querySelector('.aspirations');
+                if (!container) throw new Error('Aspirations container not found');
+                const addButton = container.querySelector('.add-button');
+                if (!addButton) throw new Error('Add Aspiration button not found');
+                const index = aspirationCount++;
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.setAttribute('data-index', index);
+                item.innerHTML = `
+                    <input type="text" id="aspiration-${index}" placeholder="ASPIRATION" onchange="saveCharacter()">
+                    <button class="remove-button" id="remove-aspiration-${index}">-</button>
+                `;
+                container.insertBefore(item, addButton);
+                updateRemoveButtons('aspiration');
+                addEvent(document.getElementById(`remove-aspiration-${index}`), () => removeAspiration(index), `remove-aspiration-${index}`);
+                saveCharacter();
+                console.log(`Added aspiration-${index}`);
+            } catch (err) {
+                console.error('Error in addAspiration:', err);
+            }
+        }
+
+        function removeAspiration(index) {
+            try {
+                if (aspirationCount <= 1) {
+                    console.log('Cannot remove last aspiration; minimum one required');
+                    return;
+                }
+                const item = document.querySelector(`.aspirations .item[data-index="${index}"]`);
+                if (!item) throw new Error(`Aspiration item ${index} not found`);
+                item.remove();
+                aspirationCount--;
+                updateRemoveButtons('aspiration');
+                saveCharacter();
+                console.log(`Removed aspiration-${index}`);
+            } catch (err) {
+                console.error('Error in removeAspiration:', err);
+            }
+        }
+
+        function addGear() {
+            try {
+                const container = document.querySelector('.gear-section');
+                if (!container) throw new Error('Gear container not found');
+                const addButton = container.querySelector('.add-button');
+                if (!addButton) throw new Error('Add Gear button not found');
+                const index = gearCount++;
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.setAttribute('data-index', index);
+                item.innerHTML = `
+                    <input type="text" id="gear-${index}" placeholder="WEAPON/TOOL/ITEM" onchange="saveCharacter()">
+                    <button class="remove-button" id="remove-gear-${index}">-</button>
+                `;
+                container.insertBefore(item, addButton);
+                updateRemoveButtons('gear');
+                addEvent(document.getElementById(`remove-gear-${index}`), () => removeGear(index), `remove-gear-${index}`);
+                saveCharacter();
+                console.log(`Added gear-${index}`);
+            } catch (err) {
+                console.error('Error in addGear:', err);
+            }
+        }
+
+        function removeGear(index) {
+            try {
+                if (gearCount <= 1) {
+                    console.log('Cannot remove last gear; minimum one required');
+                    return;
+                }
+                const item = document.querySelector(`.gear-section .item[data-index="${index}"]`);
+                if (!item) throw new Error(`Gear item ${index} not found`);
+                item.remove();
+                gearCount--;
+                updateRemoveButtons('gear');
+                saveCharacter();
+                console.log(`Removed gear-${index}`);
+            } catch (err) {
+                console.error('Error in removeGear:', err);
+            }
+        }
+
+        function addAbility() {
+            try {
+                const container = document.querySelector('.abilities-section');
+                if (!container) throw new Error('Abilities container not found');
+                const addButton = container.querySelector('.add-button');
+                if (!addButton) throw new Error('Add Ability button not found');
+                const index = abilityCount++;
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.setAttribute('data-index', index);
+                item.innerHTML = `
+                    <input type="text" id="ability-${index}" placeholder="SPELL/ABILITY/FEATURE/SKILL" onchange="saveCharacter()">
+                    <button class="remove-button" id="remove-ability-${index}">-</button>
+                `;
+                container.insertBefore(item, addButton);
+                updateRemoveButtons('ability');
+                addEvent(document.getElementById(`remove-ability-${index}`), () => removeAbility(index), `remove-ability-${index}`);
+                saveCharacter();
+                console.log(`Added ability-${index}`);
+            } catch (err) {
+                console.error('Error in addAbility:', err);
+            }
+        }
+
+        function removeAbility(index) {
+            try {
+                if (abilityCount <= 1) {
+                    console.log('Cannot remove last ability; minimum one required');
+                    return;
+                }
+                const item = document.querySelector(`.abilities-section .item[data-index="${index}"]`);
+                if (!item) throw new Error(`Ability item ${index} not found`);
+                item.remove();
+                abilityCount--;
+                updateRemoveButtons('ability');
+                saveCharacter();
+                console.log(`Removed ability-${index}`);
+            } catch (err) {
+                console.error('Error in removeAbility:', err);
+            }
+        }
+
+        function addCondition() {
+            try {
+                const container = document.querySelector('.conditions-section');
+                if (!container) throw new Error('Conditions container not found');
+                const addButton = container.querySelector('.add-button');
+                if (!addButton) throw new Error('Add Condition button not found');
+                const index = conditionCount++;
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.setAttribute('data-index', index);
+                item.innerHTML = `
+                    <input type="text" id="condition-${index}" placeholder="CONDITION" onchange="saveCharacter()">
+                    <button class="remove-button" id="remove-condition-${index}">-</button>
+                `;
+                container.insertBefore(item, addButton);
+                updateRemoveButtons('condition');
+                addEvent(document.getElementById(`remove-condition-${index}`), () => removeCondition(index), `remove-condition-${index}`);
+                saveCharacter();
+                console.log(`Added condition-${index}`);
+            } catch (err) {
+                console.error('Error in addCondition:', err);
+            }
+        }
+
+        function removeCondition(index) {
+            try {
+                if (conditionCount <= 1) {
+                    console.log('Cannot remove last condition; minimum one required');
+                    return;
+                }
+                const item = document.querySelector(`.conditions-section .item[data-index="${index}"]`);
+                if (!item) throw new Error(`Condition item ${index} not found`);
+                item.remove();
+                conditionCount--;
+                updateRemoveButtons('condition');
+                saveCharacter();
+                console.log(`Removed condition-${index}`);
+            } catch (err) {
+                console.error('Error in removeCondition:', err);
+            }
+        }
+
+        function updateRemoveButtons(type) {
+            try {
+                const count = type === 'trait' ? traitCount : 
+                             type === 'flaw' ? flawCount : 
+                             type === 'aspiration' ? aspirationCount : 
+                             type === 'gear' ? gearCount : 
+                             type === 'ability' ? abilityCount : 
+                             conditionCount;
+                const selector = type === 'trait' ? '.traits' : 
+                                type === 'flaw' ? '.flaws' : 
+                                type === 'aspiration' ? '.aspirations' : 
+                                type === 'gear' ? '.gear-section' : 
+                                type === 'ability' ? '.abilities-section' : 
+                                '.conditions-section';
+                const buttons = document.querySelectorAll(`${selector} .remove-button`);
+                buttons.forEach(button => {
+                    button.style.display = count > 1 ? 'block' : 'none';
+                });
+                console.log(`Updated remove buttons for ${type}, count: ${count}`);
+            } catch (err) {
+                console.error('Error in updateRemoveButtons:', err);
+            }
+        }
+
+        function rollD20() {
+            try {
+                const result = Math.floor(Math.random() * 20) + 1;
+                const resultButton = document.getElementById('d20-result');
+                const messageDisplay = document.getElementById('dice-message');
+                if (!resultButton || !messageDisplay) throw new Error('Dice elements not found');
+                resultButton.textContent = result;
+                messageDisplay.textContent = '';
+                if (result === 1) {
+                    messageDisplay.textContent = 'DIRE FAILURE!';
+                } else if (result === 20) {
+                    messageDisplay.textContent = 'GREAT SUCCESS!';
+                }
+                console.log(`Rolled: ${result}, Message: ${messageDisplay.textContent}`);
+            } catch (err) {
+                console.error('Error in rollD20:', err);
+            }
+        }
+
+        function saveCharacter() {
+            try {
+                const character = {
+                    name: document.getElementById('name').value,
+                    concept: document.getElementById('concept').value,
+                    traits: [],
+                    flaws: [],
+                    aspirations: [],
+                    conditions: [],
+                    gear: [],
+                    abilities: [],
+                    notes: document.getElementById('notes').value
+                };
+                document.querySelectorAll('.traits .item').forEach(item => {
+                    const index = item.getAttribute('data-index');
+                    const input = document.getElementById(`trait-${index}`);
+                    if (input && input.value) character.traits.push(input.value);
+                });
+                document.querySelectorAll('.flaws .item').forEach(item => {
+                    const index = item.getAttribute('data-index');
+                    const input = document.getElementById(`flaw-${index}`);
+                    if (input && input.value) character.flaws.push(input.value);
+                });
+                document.querySelectorAll('.aspirations .item').forEach(item => {
+                    const index = item.getAttribute('data-index');
+                    const input = document.getElementById(`aspiration-${index}`);
+                    if (input && input.value) character.aspirations.push(input.value);
+                });
+                document.querySelectorAll('.conditions-section .item').forEach(item => {
+                    const index = item.getAttribute('data-index');
+                    const input = document.getElementById(`condition-${index}`);
+                    if (input && input.value) character.conditions.push(input.value);
+                });
+                document.querySelectorAll('.gear-section .item').forEach(item => {
+                    const index = item.getAttribute('data-index');
+                    const input = document.getElementById(`gear-${index}`);
+                    if (input && input.value) character.gear.push(input.value);
+                });
+                document.querySelectorAll('.abilities-section .item').forEach(item => {
+                    const index = item.getAttribute('data-index');
+                    const input = document.getElementById(`ability-${index}`);
+                    if (input && input.value) character.abilities.push(input.value);
+                });
+                localStorage.setItem('character', JSON.stringify(character));
+                console.log('Character saved:', character);
+            } catch (err) {
+                console.error('Error in saveCharacter:', err);
+            }
+        }
+
+        function loadCharacter() {
+            try {
+                const savedCharacter = localStorage.getItem('character');
+                if (!savedCharacter) {
+                    console.log('No saved character found in localStorage');
+                    return;
+                }
+                const character = JSON.parse(savedCharacter);
+                if (!character) {
+                    console.error('Invalid character data in localStorage');
                     return;
                 }
 
-                initiativeTime = state.initiativeTime || 0;
-                combatTime = state.combatTime || 5 * 60 * 1000;
-                initiativeTimerRunning = state.initiativeTimerRunning || false;
-                combatTimerRunning = state.combatTimerRunning || false;
-                currentTurnIndex = state.currentTurnIndex || -1;
+                // Load name and concept
+                document.getElementById('name').value = character.name || '';
+                document.getElementById('concept').value = character.concept || '';
+                document.getElementById('notes').value = character.notes || '';
 
-                const participantList = document.getElementById('participant-list');
-                participantList.innerHTML = '';
-
-                state.participants.forEach(participant => {
-                    const newParticipant = document.createElement('div');
-                    newParticipant.className = 'participant-row';
-                    newParticipant.innerHTML = `
-                        <div class="type-section">
-                            <select onchange="updateRowStyle(this)">
-                                <option value="PC">PC</option>
-                                <option value="NPC-Trivial">NPC-Trivial</option>
-                                <option value="NPC-Standard">NPC-Standard</option>
-                                <option value="NPC-Elite">NPC-Elite</option>
-                                <option value="NPC-Boss">NPC-Boss</option>
-                                <option value="NPC-Nemesis">NPC-Nemesis</option>
-                            </select>
-                            <div class="dr-dead-section">
-                                <input type="number" placeholder="DR" value="${participant.dr || '1'}" onchange="saveState()">
-                                <input type="checkbox" title="Dead" onchange="checkRowStatus(this)" ${participant.dead ? 'checked' : ''}>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="name-conditions">
-                                <div class="name-section">
-                                    <input type="text" placeholder="${participant.type.startsWith('NPC-') ? participant.type : 'Name'}" class="name-input" value="${participant.name || ''}" onchange="saveState()">
-                                </div>
-                                <div class="conditions-section"></div>
-                            </div>
-                        </div>
-                        <div class="initiative-section">
-                            <input type="number" placeholder="Init" value="${participant.initiative || ''}" onchange="saveState()">
-                            <button class="remove-button" onclick="removeParticipant(this)">-</button>
-                        </div>
-                    `;
-                    participantList.appendChild(newParticipant);
-                    const select = newParticipant.querySelector('select');
-                    select.value = participant.type || 'PC';
-                    const conditionsSection = newParticipant.querySelector('.conditions-section');
-                    const isMobile = window.innerWidth <= 600;
-                    participant.conditions.forEach((condition, index) => {
-                        const input = document.createElement('input');
-                        input.type = 'text';
-                        input.placeholder = `Condition ${index + 1}`;
-                        input.value = condition || '';
-                        input.style.width = `calc(100% / ${participant.conditions.length || 1})`;
-                        input.style.minWidth = isMobile ? '15px' : '0';
-                        input.style.fontSize = isMobile && participant.conditions.length >= 2 ? '0.65em' : '';
-                        input.onchange = saveState;
-                        conditionsSection.appendChild(input);
+                // Helper function to rebuild section
+                function rebuildSection(containerSelector, type, items, countVar, addFunction, removeFunction, placeholder) {
+                    const container = document.querySelector(containerSelector);
+                    if (!container) throw new Error(`${type} container not found`);
+                    container.innerHTML = `<h3>${type.toUpperCase()}</h3>`;
+                    window[countVar] = 0;
+                    (items || ['']).forEach((item, index) => {
+                        if (item) { // Only add non-empty items
+                            const div = document.createElement('div');
+                            div.className = 'item';
+                            div.setAttribute('data-index', index);
+                            div.innerHTML = `
+                                <input type="text" id="${type.toLowerCase()}-${index}" placeholder="${placeholder}" value="${item}" onchange="saveCharacter()">
+                                <button class="remove-button" id="remove-${type.toLowerCase()}-${index}">-</button>
+                            `;
+                            container.appendChild(div);
+                            addEvent(document.getElementById(`remove-${type.toLowerCase()}-${index}`), () => removeFunction(index), `remove-${type.toLowerCase()}-${index}`);
+                            window[countVar] = index + 1;
+                        }
                     });
-                    updateDR(select);
-                    checkRowStatus(select);
-                    if (participant.dead) {
-                        newParticipant.classList.add('dead-row');
-                    }
-                    switch (participant.type) {
-                        case 'NPC-Trivial': newParticipant.classList.add('npc-trivial'); break;
-                        case 'NPC-Standard': newParticipant.classList.add('npc-standard'); break;
-                        case 'NPC-Elite': newParticipant.classList.add('npc-elite'); break;
-                        case 'NPC-Boss': newParticipant.classList.add('npc-boss'); break;
-                        case 'NPC-Nemesis': newParticipant.classList.add('npc-nemesis'); break;
-                    }
-                });
-
-                document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
-                document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
-
-                if (initiativeTimerRunning) {
-                    initiativeInterval = setInterval(updateInitiativeTimer, 100);
-                }
-                if (combatTimerRunning) {
-                    combatInterval = setInterval(updateCombatTimer, 100);
+                    container.innerHTML += `<button class="add-button" id="add-${type.toLowerCase()}">+ ADD ${type}</button>`;
+                    addEvent(document.getElementById(`add-${type.toLowerCase()}`), addFunction, `add-${type.toLowerCase()}`);
+                    updateRemoveButtons(type.toLowerCase());
                 }
 
-                updateParticipants();
-                updateActiveTurn();
-            } catch (error) {
-                console.error('Error loading state:', error);
-                updateRowStyle(document.querySelector('.participant-row select'));
+                // Rebuild sections
+                rebuildSection('.traits', 'TRAITS', character.traits, 'traitCount', addTrait, removeTrait, 'TRAIT');
+                rebuildSection('.flaws', 'FLAWS', character.flaws, 'flawCount', addFlaw, removeFlaw, 'FLAW');
+                rebuildSection('.aspirations', 'ASPIRATIONS', character.aspirations, 'aspirationCount', addAspiration, removeAspiration, 'ASPIRATION');
+                rebuildSection('.conditions-section', 'CONDITION', character.conditions, 'conditionCount', addCondition, removeCondition, 'CONDITION');
+                rebuildSection('.gear-section', 'GEAR', character.gear, 'gearCount', addGear, removeGear, 'WEAPON/TOOL/ITEM');
+                rebuildSection('.abilities-section', 'ABILITY', character.abilities, 'abilityCount', addAbility, removeAbility, 'SPELL/ABILITY/FEATURE/SKILL');
+
+                console.log('Character loaded from localStorage:', character);
+            } catch (err) {
+                console.error('Error in loadCharacter:', err);
             }
         }
 
-        function updateConditions(select) {
-            const row = select.closest('.participant-row');
-            const conditionsSection = row.querySelector('.conditions-section');
-            const type = select.value;
-            let numConditions = 0;
-            switch (type) {
-                case 'PC': numConditions = 3; break;
-                case 'NPC-Trivial': numConditions = 0; break;
-                case 'NPC-Standard': numConditions = 1; break;
-                case 'NPC-Elite': numConditions = 2; break;
-                case 'NPC-Boss': numConditions = 3; break;
-                case 'NPC-Nemesis': numConditions = 4; break;
-            }
-            conditionsSection.innerHTML = '';
-            const isMobile = window.innerWidth <= 600;
-            for (let i = 1; i <= numConditions; i++) {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.placeholder = `Condition ${i}`;
-                input.style.width = `calc(100% / ${numConditions})`;
-                input.style.minWidth = isMobile ? '15px' : '0';
-                input.style.fontSize = isMobile && numConditions >= 2 ? '0.65em' : '';
-                input.onchange = saveState;
-                conditionsSection.appendChild(input);
-            }
-            saveState();
-        }
-
-        function updateDR(select) {
-            const row = select.closest('.participant-row');
-            const drInput = row.querySelector('.dr-dead-section input[type="number"]');
-            const type = select.value;
-            let defaultDR;
-            switch (type) {
-                case 'PC': defaultDR = 1; break;
-                case 'NPC-Trivial': defaultDR = 10; break;
-                case 'NPC-Standard': defaultDR = 12; break;
-                case 'NPC-Elite': defaultDR = 14; break;
-                case 'NPC-Boss': defaultDR = 16; break;
-                case 'NPC-Nemesis': defaultDR = 18; break;
-            }
-            drInput.value = defaultDR;
-            saveState();
-        }
-
-        function updateName(select) {
-            const row = select.closest('.participant-row');
-            const nameInput = row.querySelector('.name-input');
-            const type = select.value;
-            if (type.startsWith('NPC-')) {
-                nameInput.value = type;
-                nameInput.placeholder = type;
-            } else {
-                nameInput.value = '';
-                nameInput.placeholder = 'Name';
-            }
-            saveState();
-        }
-
-        function updateRowStyle(select) {
-            const row = select.closest('.participant-row');
-            row.classList.remove('npc-trivial', 'npc-standard', 'npc-elite', 'npc-boss', 'npc-nemesis', 'dead-row');
-            switch (select.value) {
-                case 'NPC-Trivial': row.classList.add('npc-trivial'); break;
-                case 'NPC-Standard': row.classList.add('npc-standard'); break;
-                case 'NPC-Elite': row.classList.add('npc-elite'); break;
-                case 'NPC-Boss': row.classList.add('npc-boss'); break;
-                case 'NPC-Nemesis': row.classList.add('npc-nemesis'); break;
-                case 'PC': break;
-            }
-            updateConditions(select);
-            updateDR(select);
-            updateName(select);
-            checkRowStatus(select);
-        }
-
-        function checkRowStatus(element) {
-            const row = element.closest('.participant-row');
-            const deadCheckbox = row.querySelector('.type-section input[type="checkbox"]');
-            row.classList.remove('dead-row');
-            if (deadCheckbox && deadCheckbox.checked) {
-                row.classList.add('dead-row');
-            }
-            saveState();
-        }
-
-        function addParticipant() {
-            const participantList = document.getElementById('participant-list');
-            const newParticipant = document.createElement('div');
-            newParticipant.className = 'participant-row';
-            newParticipant.innerHTML = `
-                <div class="type-section">
-                    <select onchange="updateRowStyle(this)">
-                        <option value="PC">PC</option>
-                        <option value="NPC-Trivial">NPC-Trivial</option>
-                        <option value="NPC-Standard">NPC-Standard</option>
-                        <option value="NPC-Elite">NPC-Elite</option>
-                        <option value="NPC-Boss">NPC-Boss</option>
-                        <option value="NPC-Nemesis">NPC-Nemesis</option>
-                    </select>
-                    <div class="dr-dead-section">
-                        <input type="number" placeholder="DR" value="1" onchange="saveState()">
-                        <input type="checkbox" title="Dead" onchange="checkRowStatus(this)">
-                    </div>
-                </div>
-                <div>
-                    <div class="name-conditions">
-                        <div class="name-section">
-                            <input type="text" placeholder="Name" class="name-input" onchange="saveState()">
-                        </div>
-                        <div class="conditions-section">
-                            <input type="text" placeholder="Condition 1" onchange="saveState()">
-                            <input type="text" placeholder="Condition 2" onchange="saveState()">
-                            <input type="text" placeholder="Condition 3" onchange="saveState()">
-                        </div>
-                    </div>
-                </div>
-                <div class="initiative-section">
-                    <input type="number" placeholder="Init" onchange="saveState()">
-                    <button class="remove-button" onclick="removeParticipant(this)">-</button>
-                </div>
-            `;
-            participantList.appendChild(newParticipant);
-            updateRowStyle(newParticipant.querySelector('select'));
-            updateParticipants();
-            saveState();
-        }
-
-        function removeParticipant(button) {
-            const row = button.closest('.participant-row');
-            const wasActive = row.classList.contains('active-turn');
-            const index = Array.from(document.getElementsByClassName('participant-row')).indexOf(row);
-            row.remove();
-            updateParticipants();
-            if (wasActive && participants.length > 0) {
-                currentTurnIndex = Math.min(index, participants.length - 1);
-            } else if (participants.length === 0) {
-                currentTurnIndex = -1;
-            }
-            updateActiveTurn();
-            saveState();
-        }
-
-        function sortParticipants() {
-            const participantList = document.getElementById('participant-list');
-            const rows = Array.from(participantList.getElementsByClassName('participant-row'));
-            const activeRow = rows.find(row => row.classList.contains('active-turn'));
-            const activeIndex = activeRow ? rows.indexOf(activeRow) : -1;
-
-            const sortedRows = rows.sort((a, b) => {
-                const initA = parseInt(a.querySelector('.initiative-section input[type="number"]').value) || 0;
-                const initB = parseInt(b.querySelector('.initiative-section input[type="number"]').value) || 0;
-                return initB - initA;
-            });
-
-            participantList.innerHTML = '';
-            sortedRows.forEach(row => participantList.appendChild(row));
-            updateParticipants();
-            if (activeIndex >= 0 && participants.length > 0) {
-                currentTurnIndex = Math.min(activeIndex, participants.length - 1);
-            } else if (participants.length === 0) {
-                currentTurnIndex = -1;
-            }
-            updateActiveTurn();
-            saveState();
-        }
-
-        function updateParticipants() {
-            participants = Array.from(document.getElementsByClassName('participant-row')).map(row => ({
-                name: row.querySelector('.name-input').value || 'Unnamed',
-                initiative: parseInt(row.querySelector('.initiative-section input[type="number"]').value) || 0
-            }));
-            saveState();
-        }
-
-        function updateActiveTurn() {
-            const rows = document.getElementsByClassName('participant-row');
-            Array.from(rows).forEach(row => row.classList.remove('active-turn'));
-            if (currentTurnIndex >= 0 && currentTurnIndex < rows.length) {
-                rows[currentTurnIndex].classList.add('active-turn');
-                document.getElementById('active-turn').textContent = `Active Turn: ${participants[currentTurnIndex].name}`;
-            } else {
-                document.getElementById('active-turn').textContent = 'NO ACTIVE TURN';
-            }
-            saveState();
-        }
-
-        function formatTime(ms) {
-            const seconds = Math.floor(ms / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            const millis = Math.floor((ms % 1000) / 100);
-            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${millis}`;
-        }
-
-        function formatCombatTime(ms) {
-            const seconds = Math.floor(ms / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        function updateInitiativeTimer() {
-            if (initiativeTimerRunning) {
-                initiativeTime += 100;
-                document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
-                saveState();
+        function exportCharacter() {
+            try {
+                const character = JSON.parse(localStorage.getItem('character') || '{}');
+                const json = JSON.stringify(character, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'character.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                console.log('Character exported');
+            } catch (err) {
+                console.error('Error in exportCharacter:', err);
             }
         }
 
-        function updateCombatTimer() {
-            if (combatTimerRunning && combatTime > 0) {
-                combatTime -= 100;
-                document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
-                saveState();
+        function importCharacter(event) {
+            try {
+                const file = event.target.files[0];
+                if (!file) throw new Error('No file selected');
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const character = JSON.parse(e.target.result);
+                        localStorage.setItem('character', JSON.stringify(character));
+                        loadCharacter();
+                        alert('CHARACTER IMPORTED SUCCESSFULLY!');
+                        console.log('Character imported:', character);
+                    } catch (err) {
+                        alert('ERROR IMPORTING CHARACTER: INVALID JSON FILE.');
+                        console.error('Import error:', err);
+                    }
+                };
+                reader.readAsText(file);
+                console.log('Import character initiated');
+            } catch (err) {
+                console.error('Error in importCharacter:', err);
             }
         }
 
-        function toggleInitiativeTimer() {
-            initiativeTimerRunning = !initiativeTimerRunning;
-            if (initiativeTimerRunning && !initiativeInterval) {
-                initiativeInterval = setInterval(updateInitiativeTimer, 100);
-            } else if (!initiativeTimerRunning && initiativeInterval) {
-                clearInterval(initiativeInterval);
-                initiativeInterval = null;
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                // Add event listeners for static buttons
+                addEvent(document.getElementById('add-trait'), addTrait, 'add-trait');
+                addEvent(document.getElementById('remove-trait-0'), () => removeTrait(0), 'remove-trait-0');
+                addEvent(document.getElementById('add-flaw'), addFlaw, 'add-flaw');
+                addEvent(document.getElementById('remove-flaw-0'), () => removeFlaw(0), 'remove-flaw-0');
+                addEvent(document.getElementById('add-aspiration'), addAspiration, 'add-aspiration');
+                addEvent(document.getElementById('remove-aspiration-0'), () => removeAspiration(0), 'remove-aspiration-0');
+                addEvent(document.getElementById('add-gear'), addGear, 'add-gear');
+                addEvent(document.getElementById('remove-gear-0'), () => removeGear(0), 'remove-gear-0');
+                addEvent(document.getElementById('add-ability'), addAbility, 'add-ability');
+                addEvent(document.getElementById('remove-ability-0'), () => removeAbility(0), 'remove-ability-0');
+                addEvent(document.getElementById('add-condition'), addCondition, 'add-condition');
+                addEvent(document.getElementById('remove-condition-0'), () => removeCondition(0), 'remove-condition-0');
+                addEvent(document.getElementById('d20-result'), rollD20, 'd20-result');
+                addEvent(document.getElementById('save-notes'), saveCharacter, 'save-notes');
+                addEvent(document.getElementById('export-character'), exportCharacter, 'export-character');
+                addEvent(document.getElementById('import-character'), () => document.getElementById('import-file').click(), 'import-character');
+                addEvent(document.getElementById('info-character-info'), () => toggleInfo('character-info'), 'info-character-info');
+                addEvent(document.getElementById('info-identity'), () => toggleInfo('identity'), 'info-identity');
+                addEvent(document.getElementById('info-hp'), () => toggleInfo('hp'), 'info-hp');
+                addEvent(document.getElementById('info-gear'), () => toggleInfo('gear'), 'info-gear');
+                addEvent(document.getElementById('info-abilities'), () => toggleInfo('abilities'), 'info-abilities');
+                addEvent(document.getElementById('info-dice-roller'), () => toggleInfo('dice-roller'), 'info-dice-roller');
+                addEvent(document.getElementById('info-notes'), () => toggleInfo('notes'), 'info-notes');
+
+                // Load saved character
+                loadCharacter();
+                console.log('DOM loaded, event listeners initialized');
+            } catch (err) {
+                console.error('Error in DOMContentLoaded:', err);
             }
-            saveState();
-        }
-
-        function resetInitiativeTimer() {
-            initiativeTimerRunning = false;
-            clearInterval(initiativeInterval);
-            initiativeInterval = null;
-            initiativeTime = 0;
-            document.getElementById('initiative-timer').textContent = formatTime(initiativeTime);
-            saveState();
-        }
-
-        function toggleCombatTimer() {
-            combatTimerRunning = !combatTimerRunning;
-            if (combatTimerRunning && !combatInterval) {
-                combatInterval = setInterval(updateCombatTimer, 100);
-            } else if (!combatTimerRunning && combatInterval) {
-                clearInterval(combatInterval);
-                combatInterval = null;
-            }
-            saveState();
-        }
-
-        function resetCombatTimer() {
-            combatTimerRunning = false;
-            clearInterval(combatInterval);
-            combatInterval = null;
-            combatTime = 5 * 60 * 1000;
-            document.getElementById('combat-timer').textContent = formatCombatTime(combatTime);
-            saveState();
-        }
-
-        function startCombat() {
-            updateParticipants();
-            if (participants.length > 0) {
-                currentTurnIndex = 0;
-                updateActiveTurn();
-            }
-            saveState();
-        }
-
-        function previousTurn() {
-            if (participants.length > 0) {
-                currentTurnIndex = (currentTurnIndex - 1 + participants.length) % participants.length;
-                updateActiveTurn();
-            }
-            saveState();
-        }
-
-        function nextTurn() {
-            if (participants.length > 0) {
-                currentTurnIndex = (currentTurnIndex + 1) % participants.length;
-                updateActiveTurn();
-            }
-            saveState();
-        }
-
-        function endCombat() {
-            currentTurnIndex = -1;
-            updateActiveTurn();
-            resetInitiativeTimer();
-            resetCombatTimer();
-            saveState();
-        }
+        });
     </script>
 </body>
 </html>
