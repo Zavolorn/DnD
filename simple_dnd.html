@@ -280,9 +280,9 @@
             <h2>CHARACTER</h2>
         </div>
         <div class="character-name">
-            <input type="text" id="name" placeholder="NAME" onchange="updateCharacterName()">
+            <input type="text" id="name" placeholder="NAME" onchange="saveCharacter()">
             <span>THE</span>
-            <input type="text" id="concept" placeholder="CHARACTER CONCEPT" onchange="updateCharacterName()">
+            <input type="text" id="concept" placeholder="CHARACTER CONCEPT" onchange="saveCharacter()">
         </div>
         <div class="info-content" id="character-info-info">
             Your character’s name and concept define their identity. Example: “Zavolorn the Healer” describes a healer named Zavolorn. Enter a name and a short description of their role or personality.
@@ -472,9 +472,6 @@
             try {
                 const name = document.getElementById('name').value;
                 const concept = document.getElementById('concept').value;
-                const fullName = document.getElementById('full-name');
-                if (!fullName) throw new Error('Full name element not found');
-                fullName.textContent = name && concept ? `${name} THE ${concept}` : '';
                 saveCharacter();
                 console.log('Character name updated');
             } catch (err) {
@@ -793,37 +790,94 @@
                 document.querySelectorAll('.traits .item').forEach(item => {
                     const index = item.getAttribute('data-index');
                     const input = document.getElementById(`trait-${index}`);
-                    if (input) character.traits.push(input.value);
+                    if (input && input.value) character.traits.push(input.value);
                 });
                 document.querySelectorAll('.flaws .item').forEach(item => {
                     const index = item.getAttribute('data-index');
                     const input = document.getElementById(`flaw-${index}`);
-                    if (input) character.flaws.push(input.value);
+                    if (input && input.value) character.flaws.push(input.value);
                 });
                 document.querySelectorAll('.aspirations .item').forEach(item => {
                     const index = item.getAttribute('data-index');
                     const input = document.getElementById(`aspiration-${index}`);
-                    if (input) character.aspirations.push(input.value);
+                    if (input && input.value) character.aspirations.push(input.value);
                 });
                 document.querySelectorAll('.conditions-section .item').forEach(item => {
                     const index = item.getAttribute('data-index');
                     const input = document.getElementById(`condition-${index}`);
-                    if (input) character.conditions.push(input.value);
+                    if (input && input.value) character.conditions.push(input.value);
                 });
                 document.querySelectorAll('.gear-section .item').forEach(item => {
                     const index = item.getAttribute('data-index');
                     const input = document.getElementById(`gear-${index}`);
-                    if (input) character.gear.push(input.value);
+                    if (input && input.value) character.gear.push(input.value);
                 });
                 document.querySelectorAll('.abilities-section .item').forEach(item => {
                     const index = item.getAttribute('data-index');
                     const input = document.getElementById(`ability-${index}`);
-                    if (input) character.abilities.push(input.value);
+                    if (input && input.value) character.abilities.push(input.value);
                 });
                 localStorage.setItem('character', JSON.stringify(character));
                 console.log('Character saved:', character);
             } catch (err) {
                 console.error('Error in saveCharacter:', err);
+            }
+        }
+
+        function loadCharacter() {
+            try {
+                const savedCharacter = localStorage.getItem('character');
+                if (!savedCharacter) {
+                    console.log('No saved character found in localStorage');
+                    return;
+                }
+                const character = JSON.parse(savedCharacter);
+                if (!character) {
+                    console.error('Invalid character data in localStorage');
+                    return;
+                }
+
+                // Load name and concept
+                document.getElementById('name').value = character.name || '';
+                document.getElementById('concept').value = character.concept || '';
+                document.getElementById('notes').value = character.notes || '';
+
+                // Helper function to rebuild section
+                function rebuildSection(containerSelector, type, items, countVar, addFunction, removeFunction, placeholder) {
+                    const container = document.querySelector(containerSelector);
+                    if (!container) throw new Error(`${type} container not found`);
+                    container.innerHTML = `<h3>${type.toUpperCase()}</h3>`;
+                    window[countVar] = 0;
+                    (items || ['']).forEach((item, index) => {
+                        if (item) { // Only add non-empty items
+                            const div = document.createElement('div');
+                            div.className = 'item';
+                            div.setAttribute('data-index', index);
+                            div.innerHTML = `
+                                <input type="text" id="${type.toLowerCase()}-${index}" placeholder="${placeholder}" value="${item}" onchange="saveCharacter()">
+                                <button class="remove-button" id="remove-${type.toLowerCase()}-${index}">-</button>
+                            `;
+                            container.appendChild(div);
+                            addEvent(document.getElementById(`remove-${type.toLowerCase()}-${index}`), () => removeFunction(index), `remove-${type.toLowerCase()}-${index}`);
+                            window[countVar] = index + 1;
+                        }
+                    });
+                    container.innerHTML += `<button class="add-button" id="add-${type.toLowerCase()}">+ ADD ${type}</button>`;
+                    addEvent(document.getElementById(`add-${type.toLowerCase()}`), addFunction, `add-${type.toLowerCase()}`);
+                    updateRemoveButtons(type.toLowerCase());
+                }
+
+                // Rebuild sections
+                rebuildSection('.traits', 'TRAITS', character.traits, 'traitCount', addTrait, removeTrait, 'TRAIT');
+                rebuildSection('.flaws', 'FLAWS', character.flaws, 'flawCount', addFlaw, removeFlaw, 'FLAW');
+                rebuildSection('.aspirations', 'ASPIRATIONS', character.aspirations, 'aspirationCount', addAspiration, removeAspiration, 'ASPIRATION');
+                rebuildSection('.conditions-section', 'CONDITION', character.conditions, 'conditionCount', addCondition, removeCondition, 'CONDITION');
+                rebuildSection('.gear-section', 'GEAR', character.gear, 'gearCount', addGear, removeGear, 'WEAPON/TOOL/ITEM');
+                rebuildSection('.abilities-section', 'ABILITY', character.abilities, 'abilityCount', addAbility, removeAbility, 'SPELL/ABILITY/FEATURE/SKILL');
+
+                console.log('Character loaded from localStorage:', character);
+            } catch (err) {
+                console.error('Error in loadCharacter:', err);
             }
         }
 
@@ -852,132 +906,8 @@
                 reader.onload = function(e) {
                     try {
                         const character = JSON.parse(e.target.result);
-                        document.getElementById('name').value = character.name || '';
-                        document.getElementById('concept').value = character.concept || '';
-                        updateCharacterName();
-                        document.getElementById('notes').value = character.notes || '';
-
-                        // Clear and rebuild traits
-                        const traitsContainer = document.querySelector('.traits');
-                        traitsContainer.innerHTML = '<h3>TRAITS</h3>';
-                        traitCount = 0;
-                        (character.traits || ['']).forEach((trait, index) => {
-                            const item = document.createElement('div');
-                            item.className = 'item';
-                            item.setAttribute('data-index', index);
-                            item.innerHTML = `
-                                <input type="text" id="trait-${index}" placeholder="TRAIT" value="${trait}" onchange="saveCharacter()">
-                                <button class="remove-button" id="remove-trait-${index}">-</button>
-                            `;
-                            traitsContainer.appendChild(item);
-                            addEvent(document.getElementById(`remove-trait-${index}`), () => removeTrait(index), `remove-trait-${index}`);
-                            traitCount = index + 1;
-                        });
-                        traitsContainer.innerHTML += '<button class="add-button" id="add-trait">+ ADD TRAIT</button>';
-                        addEvent(document.getElementById('add-trait'), addTrait, 'add-trait');
-                        updateRemoveButtons('trait');
-
-                        // Clear and rebuild flaws
-                        const flawsContainer = document.querySelector('.flaws');
-                        flawsContainer.innerHTML = '<h3>FLAWS</h3>';
-                        flawCount = 0;
-                        (character.flaws || ['']).forEach((flaw, index) => {
-                            const item = document.createElement('div');
-                            item.className = 'item';
-                            item.setAttribute('data-index', index);
-                            item.innerHTML = `
-                                <input type="text" id="flaw-${index}" placeholder="FLAW" value="${flaw}" onchange="saveCharacter()">
-                                <button class="remove-button" id="remove-flaw-${index}">-</button>
-                            `;
-                            flawsContainer.appendChild(item);
-                            addEvent(document.getElementById(`remove-flaw-${index}`), () => removeFlaw(index), `remove-flaw-${index}`);
-                            flawCount = index + 1;
-                        });
-                        flawsContainer.innerHTML += '<button class="add-button" id="add-flaw">+ ADD FLAW</button>';
-                        addEvent(document.getElementById('add-flaw'), addFlaw, 'add-flaw');
-                        updateRemoveButtons('flaw');
-
-                        // Clear and rebuild aspirations
-                        const aspirationsContainer = document.querySelector('.aspirations');
-                        aspirationsContainer.innerHTML = '<h3>ASPIRATIONS</h3>';
-                        aspirationCount = 0;
-                        (character.aspirations || ['']).forEach((aspiration, index) => {
-                            const item = document.createElement('div');
-                            item.className = 'item';
-                            item.setAttribute('data-index', index);
-                            item.innerHTML = `
-                                <input type="text" id="aspiration-${index}" placeholder="ASPIRATION" value="${aspiration}" onchange="saveCharacter()">
-                                <button class="remove-button" id="remove-aspiration-${index}">-</button>
-                            `;
-                            aspirationsContainer.appendChild(item);
-                            addEvent(document.getElementById(`remove-aspiration-${index}`), () => removeAspiration(index), `remove-aspiration-${index}`);
-                            aspirationCount = index + 1;
-                        });
-                        aspirationsContainer.innerHTML += '<button class="add-button" id="add-aspiration">+ ADD ASPIRATION</button>';
-                        addEvent(document.getElementById('add-aspiration'), addAspiration, 'add-aspiration');
-                        updateRemoveButtons('aspiration');
-
-                        // Clear and rebuild conditions
-                        const conditionsContainer = document.querySelector('.conditions-section');
-                        conditionsContainer.innerHTML = '';
-                        conditionCount = 0;
-                        (character.conditions || ['']).forEach((condition, index) => {
-                            const item = document.createElement('div');
-                            item.className = 'item';
-                            item.setAttribute('data-index', index);
-                            item.innerHTML = `
-                                <input type="text" id="condition-${index}" placeholder="CONDITION" value="${condition}" onchange="saveCharacter()">
-                                <button class="remove-button" id="remove-condition-${index}">-</button>
-                            `;
-                            conditionsContainer.appendChild(item);
-                            addEvent(document.getElementById(`remove-condition-${index}`), () => removeCondition(index), `remove-condition-${index}`);
-                            conditionCount = index + 1;
-                        });
-                        conditionsContainer.innerHTML += '<button class="add-button" id="add-condition">+ ADD CONDITION</button>';
-                        addEvent(document.getElementById('add-condition'), addCondition, 'add-condition');
-                        updateRemoveButtons('condition');
-
-                        // Clear and rebuild gear
-                        const gearContainer = document.querySelector('.gear-section');
-                        gearContainer.innerHTML = '';
-                        gearCount = 0;
-                        (character.gear || ['']).forEach((gear, index) => {
-                            const item = document.createElement('div');
-                            item.className = 'item';
-                            item.setAttribute('data-index', index);
-                            item.innerHTML = `
-                                <input type="text" id="gear-${index}" placeholder="WEAPON/TOOL/ITEM" value="${gear}" onchange="saveCharacter()">
-                                <button class="remove-button" id="remove-gear-${index}">-</button>
-                            `;
-                            gearContainer.appendChild(item);
-                            addEvent(document.getElementById(`remove-gear-${index}`), () => removeGear(index), `remove-gear-${index}`);
-                            gearCount = index + 1;
-                        });
-                        gearContainer.innerHTML += '<button class="add-button" id="add-gear">+ ADD GEAR</button>';
-                        addEvent(document.getElementById('add-gear'), addGear, 'add-gear');
-                        updateRemoveButtons('gear');
-
-                        // Clear and rebuild abilities
-                        const abilitiesContainer = document.querySelector('.abilities-section');
-                        abilitiesContainer.innerHTML = '';
-                        abilityCount = 0;
-                        (character.abilities || ['']).forEach((ability, index) => {
-                            const item = document.createElement('div');
-                            item.className = 'item';
-                            item.setAttribute('data-index', index);
-                            item.innerHTML = `
-                                <input type="text" id="ability-${index}" placeholder="SPELL/ABILITY/FEATURE/SKILL" value="${ability}" onchange="saveCharacter()">
-                                <button class="remove-button" id="remove-ability-${index}">-</button>
-                            `;
-                            abilitiesContainer.appendChild(item);
-                            addEvent(document.getElementById(`remove-ability-${index}`), () => removeAbility(index), `remove-ability-${index}`);
-                            abilityCount = index + 1;
-                        });
-                        abilitiesContainer.innerHTML += '<button class="add-button" id="add-ability">+ ADD ABILITY</button>';
-                        addEvent(document.getElementById('add-ability'), addAbility, 'add-ability');
-                        updateRemoveButtons('ability');
-
                         localStorage.setItem('character', JSON.stringify(character));
+                        loadCharacter();
                         alert('CHARACTER IMPORTED SUCCESSFULLY!');
                         console.log('Character imported:', character);
                     } catch (err) {
@@ -1021,135 +951,7 @@
                 addEvent(document.getElementById('info-notes'), () => toggleInfo('notes'), 'info-notes');
 
                 // Load saved character
-                const savedCharacter = localStorage.getItem('character');
-                if (savedCharacter) {
-                    const character = JSON.parse(savedCharacter);
-                    document.getElementById('name').value = character.name || '';
-                    document.getElementById('concept').value = character.concept || '';
-                    updateCharacterName();
-                    document.getElementById('notes').value = character.notes || '';
-
-                    // Load traits
-                    const traitsContainer = document.querySelector('.traits');
-                    traitsContainer.innerHTML = '<h3>TRAITS</h3>';
-                    traitCount = 0;
-                    (character.traits || ['']).forEach((trait, index) => {
-                        const item = document.createElement('div');
-                        item.className = 'item';
-                        item.setAttribute('data-index', index);
-                        item.innerHTML = `
-                            <input type="text" id="trait-${index}" placeholder="TRAIT" value="${trait}" onchange="saveCharacter()">
-                            <button class="remove-button" id="remove-trait-${index}">-</button>
-                        `;
-                        traitsContainer.appendChild(item);
-                        addEvent(document.getElementById(`remove-trait-${index}`), () => removeTrait(index), `remove-trait-${index}`);
-                        traitCount = index + 1;
-                    });
-                    traitsContainer.innerHTML += '<button class="add-button" id="add-trait">+ ADD TRAIT</button>';
-                    addEvent(document.getElementById('add-trait'), addTrait, 'add-trait');
-                    updateRemoveButtons('trait');
-
-                    // Load flaws
-                    const flawsContainer = document.querySelector('.flaws');
-                    flawsContainer.innerHTML = '<h3>FLAWS</h3>';
-                    flawCount = 0;
-                    (character.flaws || ['']).forEach((flaw, index) => {
-                        const item = document.createElement('div');
-                        item.className = 'item';
-                        item.setAttribute('data-index', index);
-                        item.innerHTML = `
-                            <input type="text" id="flaw-${index}" placeholder="FLAW" value="${flaw}" onchange="saveCharacter()">
-                            <button class="remove-button" id="remove-flaw-${index}">-</button>
-                        `;
-                        flawsContainer.appendChild(item);
-                        addEvent(document.getElementById(`remove-flaw-${index}`), () => removeFlaw(index), `remove-flaw-${index}`);
-                        flawCount = index + 1;
-                    });
-                    flawsContainer.innerHTML += '<button class="add-button" id="add-flaw">+ ADD FLAW</button>';
-                    addEvent(document.getElementById('add-flaw'), addFlaw, 'add-flaw');
-                    updateRemoveButtons('flaw');
-
-                    // Load aspirations
-                    const aspirationsContainer = document.querySelector('.aspirations');
-                    aspirationsContainer.innerHTML = '<h3>ASPIRATIONS</h3>';
-                    aspirationCount = 0;
-                    (character.aspirations || ['']).forEach((aspiration, index) => {
-                        const item = document.createElement('div');
-                        item.className = 'item';
-                        item.setAttribute('data-index', index);
-                        item.innerHTML = `
-                            <input type="text" id="aspiration-${index}" placeholder="ASPIRATION" value="${aspiration}" onchange="saveCharacter()">
-                            <button class="remove-button" id="remove-aspiration-${index}">-</button>
-                        `;
-                        aspirationsContainer.appendChild(item);
-                        addEvent(document.getElementById(`remove-aspiration-${index}`), () => removeAspiration(index), `remove-aspiration-${index}`);
-                        aspirationCount = index + 1;
-                    });
-                    aspirationsContainer.innerHTML += '<button class="add-button" id="add-aspiration">+ ADD ASPIRATION</button>';
-                    addEvent(document.getElementById('add-aspiration'), addAspiration, 'add-aspiration');
-                    updateRemoveButtons('aspiration');
-
-                    // Load conditions
-                    const conditionsContainer = document.querySelector('.conditions-section');
-                    conditionsContainer.innerHTML = '';
-                    conditionCount = 0;
-                    (character.conditions || ['']).forEach((condition, index) => {
-                        const item = document.createElement('div');
-                        item.className = 'item';
-                        item.setAttribute('data-index', index);
-                        item.innerHTML = `
-                            <input type="text" id="condition-${index}" placeholder="CONDITION" value="${condition}" onchange="saveCharacter()">
-                            <button class="remove-button" id="remove-condition-${index}">-</button>
-                        `;
-                        conditionsContainer.appendChild(item);
-                        addEvent(document.getElementById(`remove-condition-${index}`), () => removeCondition(index), `remove-condition-${index}`);
-                        conditionCount = index + 1;
-                    });
-                    conditionsContainer.innerHTML += '<button class="add-button" id="add-condition">+ ADD CONDITION</button>';
-                    addEvent(document.getElementById('add-condition'), addCondition, 'add-condition');
-                    updateRemoveButtons('condition');
-
-                    // Load gear
-                    const gearContainer = document.querySelector('.gear-section');
-                    gearContainer.innerHTML = '';
-                    gearCount = 0;
-                    (character.gear || ['']).forEach((gear, index) => {
-                        const item = document.createElement('div');
-                        item.className = 'item';
-                        item.setAttribute('data-index', index);
-                        item.innerHTML = `
-                            <input type="text" id="gear-${index}" placeholder="WEAPON/TOOL/ITEM" value="${gear}" onchange="saveCharacter()">
-                            <button class="remove-button" id="remove-gear-${index}">-</button>
-                        `;
-                        gearContainer.appendChild(item);
-                        addEvent(document.getElementById(`remove-gear-${index}`), () => removeGear(index), `remove-gear-${index}`);
-                        gearCount = index + 1;
-                    });
-                    gearContainer.innerHTML += '<button class="add-button" id="add-gear">+ ADD GEAR</button>';
-                    addEvent(document.getElementById('add-gear'), addGear, 'add-gear');
-                    updateRemoveButtons('gear');
-
-                    // Load abilities
-                    const abilitiesContainer = document.querySelector('.abilities-section');
-                    abilitiesContainer.innerHTML = '';
-                    abilityCount = 0;
-                    (character.abilities || ['']).forEach((ability, index) => {
-                        const item = document.createElement('div');
-                        item.className = 'item';
-                        item.setAttribute('data-index', index);
-                        item.innerHTML = `
-                            <input type="text" id="ability-${index}" placeholder="SPELL/ABILITY/FEATURE/SKILL" value="${ability}" onchange="saveCharacter()">
-                            <button class="remove-button" id="remove-ability-${index}">-</button>
-                        `;
-                        abilitiesContainer.appendChild(item);
-                        addEvent(document.getElementById(`remove-ability-${index}`), () => removeAbility(index), `remove-ability-${index}`);
-                        abilityCount = index + 1;
-                    });
-                    abilitiesContainer.innerHTML += '<button class="add-button" id="add-ability">+ ADD ABILITY</button>';
-                    addEvent(document.getElementById('add-ability'), addAbility, 'add-ability');
-                    updateRemoveButtons('ability');
-                    console.log('Character loaded from localStorage');
-                }
+                loadCharacter();
                 console.log('DOM loaded, event listeners initialized');
             } catch (err) {
                 console.error('Error in DOMContentLoaded:', err);
